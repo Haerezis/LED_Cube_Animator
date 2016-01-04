@@ -347,7 +347,7 @@ color : white;</string>
   <customwidget>
    <class>CubeOpenGL</class>
    <extends>QWidget</extends>
-   <header>cubeopengl.hpp</header>
+   <header>CubeOpenGL.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

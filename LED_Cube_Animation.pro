@@ -10,12 +10,16 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = LED_Cube_Animation
 TEMPLATE = app
+
 INCLUDEPATH = include/
+UI_DIR = include/
+DESTDIR=bin
+OBJECTS_DIR=generated_files
+MOC_DIR=generated_files
 
 SOURCES += src/main.cpp \
     src/CubeOpenGL.cpp
 
-HEADERS  += include/MainWindows.hpp \
-    include/CubeOpenGL.hpp
+HEADERS  += include/CubeOpenGL.hpp
 
 FORMS += UI/MainWindows.ui
