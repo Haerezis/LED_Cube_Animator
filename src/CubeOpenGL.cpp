@@ -1,6 +1,7 @@
 #include "CubeOpenGL.hpp"
 
-CubeOpenGL::CubeOpenGL()
+CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
+    QOpenGLWidget(parent, f)
 {
 
 }

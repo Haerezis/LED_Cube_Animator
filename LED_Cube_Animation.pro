@@ -12,8 +12,10 @@ TARGET = LED_Cube_Animation
 TEMPLATE = app
 INCLUDEPATH = include/
 
-SOURCES += src/*.cpp \
-    CubeOpenGL.cpp
+SOURCES += src/main.cpp \
+    src/CubeOpenGL.cpp
 
-HEADERS  += include/*.hpp \
-    CubeOpenGL.hpp
+HEADERS  += include/MainWindows.hpp \
+    include/CubeOpenGL.hpp
+
+FORMS += UI/MainWindows.ui
