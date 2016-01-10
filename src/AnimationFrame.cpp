@@ -4,8 +4,8 @@ AnimationFrame::AnimationFrame(unsigned int ledCubeSize)
 {
   if(ledCubeSize == 0) ledCubeSize = 1;
 
-  _ledCube.resize(ledCubeSize);
-  for(auto &floor : _ledCube)
+  _cubeData.resize(ledCubeSize);
+  for(auto &floor : _cubeData)
   {
     floor.resize(ledCubeSize);
     for(auto &line : floor)
@@ -29,21 +29,21 @@ AnimationFrame::~AnimationFrame() {}
 
 AnimationFrame::LEDState AnimationFrame::get(unsigned int floor, unsigned int line, unsigned int column)
 {
-  if(floor >= _ledCube.size()) floor = _ledCube.size()-1;
-  if(line >= _ledCube[floor].size()) line = _ledCube.size()-1;
-  if(column >= _ledCube[floor][line].size()) column = _ledCube.size()-1;
+  if(floor >= _cubeData.size()) floor = _cubeData.size()-1;
+  if(line >= _cubeData[floor].size()) line = _cubeData.size()-1;
+  if(column >= _cubeData[floor][line].size()) column = _cubeData.size()-1;
 
-  return _ledCube[floor][line][column];
+  return _cubeData[floor][line][column];
 }
 
 
 void AnimationFrame::set(unsigned int floor, unsigned int line, unsigned int column, AnimationFrame::LEDState state)
 {
-  if(floor >= _ledCube.size()) floor = _ledCube.size()-1;
-  if(line >= _ledCube[floor].size()) line = _ledCube.size()-1;
-  if(column >= _ledCube[floor][line].size()) column = _ledCube.size()-1;
+  if(floor >= _cubeData.size()) floor = _cubeData.size()-1;
+  if(line >= _cubeData[floor].size()) line = _cubeData.size()-1;
+  if(column >= _cubeData[floor][line].size()) column = _cubeData.size()-1;
 
-  _ledCube[floor][line][column] = state;
+  _cubeData[floor][line][column] = state;
 }
 
 
@@ -64,7 +64,7 @@ void AnimationFrame::loadFromJSON(const rapidjson::Value &object)
   unsigned int f = 0, l = 0, c = 0;
 
   object["duration"].GetUint();
-  const Value &floors = object["frames"];
+  const Value &floors = object["cube_data"];
   for (auto it_f = floors.Begin(); it_f != floors.End(); ++it_f, ++f)
     for (auto it_l = it_f->Begin(); it_l != it_f->End(); ++it_l, ++l)
       for (auto it_c = it_l->Begin(); it_c != it_l->End(); ++it_c, ++c)
@@ -73,9 +73,25 @@ void AnimationFrame::loadFromJSON(const rapidjson::Value &object)
 
 rapidjson::Value AnimationFrame::saveToJSON(rapidjson::Document::AllocatorType &allocator)
 {
-  rapidjson::Value object(rapidjson::Type::kObjectType);
+  using namespace rapidjson;
+  Value object(Type::kObjectType);
+  Value cube_data(Type::kArrayType);
+  Value cube_data_floor(Type::kArrayType);
+  Value cube_data_line(Type::kArrayType);
+  
+  for(auto &floor : _cubeData) {
+    cube_data_floor = Value(Type::kArrayType);
+    for(auto &line : floor) {
+      cube_data_line = Value(Type::kArrayType);
+      for(auto &elt : line){
+        cube_data_line.PushBack((int)elt, allocator); 
+      }
+      cube_data_floor.PushBack(cube_data_line, allocator);
+    }
+    cube_data.PushBack(cube_data_floor, allocator);
+  }
   object.AddMember("duration", _duration, allocator);
-  //TODO
+  object.AddMember("cube_data", cube_data, allocator);
 
   return object;
 }

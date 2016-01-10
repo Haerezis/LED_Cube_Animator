@@ -29,7 +29,7 @@ class AnimationFrame
 
   protected:
     unsigned int _duration;
-    std::vector<std::vector<std::vector<LEDState>>> _ledCube;
+    std::vector<std::vector<std::vector<LEDState>>> _cubeData;
 };
 
 #endif
