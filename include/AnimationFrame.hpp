@@ -14,12 +14,14 @@ class AnimationFrame
       Off,
       On
     };
+    static LEDState IntToEnum(unsigned int value);
 
     AnimationFrame(unsigned int ledCubeSize);
+    AnimationFrame(unsigned int ledCubeSize, const rapidjson::Value &object);
     virtual ~AnimationFrame();
 
     LEDState get(unsigned int floor, unsigned int line, unsigned int column);
-    void get(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
+    void set(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
     unsigned int duration();
     void duration(unsigned int value);
     void loadFromJSON(const rapidjson::Value &object);

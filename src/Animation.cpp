@@ -1,6 +1,8 @@
 #include "Animation.hpp"
 
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 
 
@@ -25,9 +27,20 @@ void Animation::save(std::ostream &stream)
 {
   using namespace rapidjson;
   Document document;
+  StringBuffer buffer;
+  Writer<StringBuffer> writer(buffer);
+  Value frames(kArrayType);
 
-  //TODO
+  auto &allocator = document.GetAllocator();
+  document.AddMember("cube_size", _cubeSize, allocator);
+  for(auto &frame : _frames)
+  {
+    frames.PushBack(frame.saveToJSON(allocator), allocator);
+  }
+  document.AddMember("frames", frames, allocator);
 
+  document.Accept(writer);
+  stream << buffer.GetString();
 }
 
 void Animation::load(std::istream &stream)
@@ -36,7 +49,18 @@ void Animation::load(std::istream &stream)
   Document document;
   std::string s(std::istreambuf_iterator<char>(stream), {});
   document.Parse(s.c_str());
-  //TODO
+
+  if(!document["cube_size"].IsNumber() || !document["frames"].IsArray())
+  {
+    std::cerr << "[ERROR] File format isn't correct" << std::endl;
+    return;
+  }
+
+  _frames.clear();
+  _cubeSize = document["cube_size"].GetUint();
+  const Value &array = document["frames"];
+  for (auto it = array.Begin(); it != array.End(); ++it)
+    _frames.emplace_back(_cubeSize, *it);
 }
 
 
