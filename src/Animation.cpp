@@ -5,6 +5,10 @@
 #include "rapidjson/writer.h"
 
 
+Animation::Animation(std::istream &stream)
+{
+  load(stream);
+}
 
 Animation::Animation(unsigned int cubeSize)
 {
@@ -32,6 +36,7 @@ void Animation::save(std::ostream &stream)
   Value frames(kArrayType);
 
   auto &allocator = document.GetAllocator();
+  document.SetObject();
   document.AddMember("cube_size", _cubeSize, allocator);
   for(auto &frame : _frames)
   {

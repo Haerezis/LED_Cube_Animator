@@ -10,6 +10,7 @@ class Animation
 {
   public:
     Animation(unsigned int cubeSize);
+    Animation(std::istream &stream);
 
     unsigned int cubeSize();
     void cubeSize(unsigned int cubeSize);

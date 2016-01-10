@@ -63,8 +63,8 @@ void AnimationFrame::loadFromJSON(const rapidjson::Value &object)
   using namespace rapidjson;
   unsigned int f = 0, l = 0, c = 0;
 
-  object["duration"].GetUint();
-  const Value &floors = object["cube_data"];
+  _duration = object["duration"].GetUint();
+  const Value &floors = object["data"];
   for (auto it_f = floors.Begin(); it_f != floors.End(); ++it_f, ++f)
     for (auto it_l = it_f->Begin(); it_l != it_f->End(); ++it_l, ++l)
       for (auto it_c = it_l->Begin(); it_c != it_l->End(); ++it_c, ++c)
@@ -91,7 +91,7 @@ rapidjson::Value AnimationFrame::saveToJSON(rapidjson::Document::AllocatorType &
     cube_data.PushBack(cube_data_floor, allocator);
   }
   object.AddMember("duration", _duration, allocator);
-  object.AddMember("cube_data", cube_data, allocator);
+  object.AddMember("data", cube_data, allocator);
 
   return object;
 }
