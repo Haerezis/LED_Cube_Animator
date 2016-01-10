@@ -44,13 +44,27 @@ void AnimationFrame::get(unsigned int floor, unsigned int line, unsigned int col
 }
 
 
-void AnimationFrame::load(std::istream &stream)
+unsigned int AnimationFrame::duration()
 {
-
+  return _duration;
+}
+void AnimationFrame::duration(unsigned int value)
+{
+  _duration = value;
 }
 
 
-void AnimationFrame::save(std::ostream &stream)
+void AnimationFrame::loadFromJSON(const rapidjson::Value &object)
 {
+  //TODO
+  object["duration"].GetUint();
+}
 
+rapidjson::Value AnimationFrame::saveToJSON(rapidjson::Document::AllocatorType &allocator)
+{
+  //TODO
+  rapidjson::Value object(rapidjson::Type::kObjectType);
+  object.AddMember("duration", _duration, allocator);
+
+  return object;
 }

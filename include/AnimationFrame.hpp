@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 
+#include "rapidjson/document.h"
+
 class AnimationFrame
 {
   public:
@@ -18,10 +20,13 @@ class AnimationFrame
 
     LEDState get(unsigned int floor, unsigned int line, unsigned int column);
     void get(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
-    void load(std::istream &stream);
-    void save(std::ostream &stream);
+    unsigned int duration();
+    void duration(unsigned int value);
+    void loadFromJSON(const rapidjson::Value &object);
+    rapidjson::Value saveToJSON(rapidjson::Document::AllocatorType &allocator);
 
   protected:
+    unsigned int _duration;
     std::vector<std::vector<std::vector<LEDState>>> _ledCube;
 };
 
