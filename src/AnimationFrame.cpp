@@ -50,6 +50,7 @@ unsigned int AnimationFrame::duration()
 }
 void AnimationFrame::duration(unsigned int value)
 {
+  if(value == 0) value = 1;
   _duration = value;
 }
 
