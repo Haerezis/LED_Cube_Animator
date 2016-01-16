@@ -11,14 +11,6 @@ class ActionsSlot : public QObject
   public:
     ActionsSlot() {}
     ~ActionsSlot() {}
-    void setupConnect(Ui::MainWindow &mainWindowsUI);
-  private:
-  public slots:
-    bool newAnimation();
-    bool openAnimation();
-    bool saveAnimation();
-    bool saveAnimationAs();
-    bool generateData();
     void about();
 };
 

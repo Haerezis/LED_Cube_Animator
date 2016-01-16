@@ -18,10 +18,11 @@ class AnimationFrame
 
     AnimationFrame(unsigned int ledCubeSize);
     AnimationFrame(unsigned int ledCubeSize, const rapidjson::Value &object);
-    virtual ~AnimationFrame();
+    ~AnimationFrame() {}
 
     LEDState get(unsigned int floor, unsigned int line, unsigned int column);
     void set(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
+    void clear();
     unsigned int duration();
     void duration(unsigned int value);
     void loadFromJSON(const rapidjson::Value &object);

@@ -206,20 +206,32 @@
    <property name="text">
     <string>New animation..</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="actionOpen_Animation">
    <property name="text">
     <string>Open animation..</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionSave_Animation">
    <property name="text">
     <string>Save animation</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionGenerate_C_data">
    <property name="text">
     <string>Generate C data</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionAbout_this_application">
@@ -230,6 +242,9 @@
   <action name="actionSave_Animation_As">
    <property name="text">
     <string>Save animation as..</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
    </property>
   </action>
  </widget>

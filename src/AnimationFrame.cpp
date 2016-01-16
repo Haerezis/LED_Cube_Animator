@@ -25,8 +25,6 @@ AnimationFrame::AnimationFrame(unsigned int ledCubeSize, const rapidjson::Value 
   loadFromJSON(object);
 }
 
-AnimationFrame::~AnimationFrame() {}
-
 AnimationFrame::LEDState AnimationFrame::get(unsigned int floor, unsigned int line, unsigned int column)
 {
   if(floor >= _cubeData.size()) floor = _cubeData.size()-1;
@@ -111,4 +109,15 @@ AnimationFrame::LEDState AnimationFrame::IntToEnum(unsigned int value)
   }
   
   return res;
+}
+
+void AnimationFrame::clear()
+{
+  for(auto &floor : _cubeData) {
+    for(auto &line : floor) {
+      for(auto &elt : line){
+        elt = Off;
+      }
+    }
+  }
 }

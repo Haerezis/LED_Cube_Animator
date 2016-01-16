@@ -68,8 +68,18 @@ void Animation::load(std::istream &stream)
     _frames.emplace_back(_cubeSize, *it);
 }
 
-
-void generate(std::ostream &stream)
+std::vector<AnimationFrame>& Animation::frames()
 {
+  return _frames;
+}
+
+
+void Animation::generate(std::ostream &stream, Animation::DataFormat format, unsigned int dataSize)
+{
+  stream << "#ifndef __CUBE_DATA_HPP" << std::endl;
+  stream << "#define __CUBE_DATA_HPP" << std::endl;
+
   //TODO
+
+  stream << "#endif" << std::endl;
 }

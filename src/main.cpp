@@ -1,7 +1,10 @@
 #include <iostream>
 
 #include "ui_MainWindows.h"
-#include "ActionsSlot.hpp"
+#include "Animation.hpp"
+#include "AnimationFrame.hpp"
+#include "AnimationController.hpp"
+#include "AnimationFrameController.hpp"
 #include <QApplication>
 #include <QMainWindow>
 #include <QFile>
@@ -28,8 +31,13 @@ int main(int argc, char *argv[])
     a.setStyleSheet(ts.readAll());
   }
 
-  ActionsSlot as;
-  as.setupConnect(ui);
+  Animation animation(3);
+  AnimationFrame frame(3);
+  AnimationFrameController frameController(frame);
+  AnimationController animationController(w, animation, frameController);
+
+  frameController.setupConnect(ui);
+  animationController.setupConnect(ui);
 
   w.show();
 
