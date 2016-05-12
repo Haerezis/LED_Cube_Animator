@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 
 #include "ui_MainWindows.h"
 #include "Animation.hpp"
@@ -9,14 +10,19 @@
 #include <QMainWindow>
 #include <QFile>
 #include <QTextStream>
+#include <QStringListModel>
 
 int main(int argc, char *argv[])
 {
+  srand (time(NULL));
+
   QApplication a(argc, argv);
   QMainWindow w;
+  QStringListModel frames;
 
   Ui::MainWindow ui;
   ui.setupUi(&w);
+  ui.frame_list->setModel(&frames);
 
 
   QFile f(":qdarkstyle/style.qss");
@@ -31,12 +37,7 @@ int main(int argc, char *argv[])
     a.setStyleSheet(ts.readAll());
   }
 
-  Animation animation(3);
-  AnimationFrame frame(3);
-  AnimationFrameController frameController(frame);
-  AnimationController animationController(w, animation, frameController);
-
-  frameController.setupConnect(ui);
+  AnimationController animationController(w, ui);
   animationController.setupConnect(ui);
 
   w.show();

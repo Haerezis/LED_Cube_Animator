@@ -12,7 +12,7 @@ void AnimationFrameController::setupConnect(Ui::MainWindow &mainWindowsUI)
 
 }
 
-AnimationFrame AnimationFrameController::frame()
+AnimationFrame& AnimationFrameController::frame()
 {
   return _frame;
 }

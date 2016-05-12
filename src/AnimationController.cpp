@@ -1,5 +1,6 @@
 #include "AnimationController.hpp"
 
+#include <string>
 #include <fstream>
 #include <iostream>
 #include <QFileDialog>
@@ -11,18 +12,31 @@
 #include "ui_GenerationOptionsDialog.h"
 #include "ui_NewAnimationDialog.h"
 
-AnimationController::AnimationController(QMainWindow &mainWindow, Animation &animation, AnimationFrameController &controller) :
+AnimationController::AnimationController(QMainWindow &mainWindow, Ui::MainWindow &mainWindowUi) :
   _hasBeenModified(false),
   _mainWindow(mainWindow),
-  _animation(animation),
-  _frameController(controller)
+  _duration(*mainWindowUi.duration),
+  _animation(3),
+  _frame(3),
+  _frameController(_frame)
 {
+  QHeaderView *header = mainWindowUi.frame_list->horizontalHeader();
+  header->setSectionResizeMode(QHeaderView::Stretch);
+  header->setSectionsClickable(false);
+  header->setSectionsMovable(false);
+  mainWindowUi.frame_list->setModel(&_frameList);
 
+  QStandardItem *it = nullptr;
+  //it = new QStandardItem("ID");
+  //_frameList.setHorizontalHeaderItem(0,it);
+  it = new QStandardItem("Duration");
+  _frameList.setHorizontalHeaderItem(0,it);
 }
 
 
-void AnimationController::setFrame(unsigned int index)
+void AnimationController::setFrame()
 {
+  unsigned int index = 0;
   auto frames = _animation.frames();
   if(index >= frames.size())
     return;
@@ -34,13 +48,18 @@ void AnimationController::setFrame(unsigned int index)
 
 void AnimationController::addFrame()
 {
+  _frameController.frame().duration(_duration.value());
+  _frameList.appendRow(new QStandardItem(QString::number(_frameController.frame().duration())));
   _animation.frames().push_back(_frameController.frame());
+
+
   _frameController.clear();
   hasBeenModified(true);
 }
 
-void AnimationController::setCurrentFrame(unsigned int index)
+void AnimationController::setCurrentFrame()
 {
+  unsigned int index = 0;
   auto frames = _animation.frames();
   if(index >= frames.size())
     return;
@@ -52,11 +71,16 @@ void AnimationController::setCurrentFrame(unsigned int index)
 
 void AnimationController::setupConnect(Ui::MainWindow &mainWindow)
 {
+  _frameController.setupConnect(mainWindow);
+
   QObject::connect(mainWindow.actionNew_Animation, SIGNAL(triggered()), this, SLOT(newAnimation()));
   QObject::connect(mainWindow.actionOpen_Animation, SIGNAL(triggered()), this, SLOT(openAnimation()));
   QObject::connect(mainWindow.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
   QObject::connect(mainWindow.actionSave_Animation_As, SIGNAL(triggered()), this, SLOT(saveAnimationAs()));
   QObject::connect(mainWindow.actionGenerate_C_data, SIGNAL(triggered()), this, SLOT(generateData()));
+
+  QObject::connect(mainWindow.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
+  QObject::connect(mainWindow.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
 }
 
 bool AnimationController::load()

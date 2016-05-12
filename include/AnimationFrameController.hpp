@@ -14,7 +14,7 @@ class AnimationFrameController : public QObject
 
     void setupConnect(Ui::MainWindow &mainWindowsUI);
 
-    AnimationFrame frame();
+    AnimationFrame& frame();
     void frame(AnimationFrame &frame);
     void clear();
   private:

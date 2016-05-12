@@ -20,6 +20,9 @@ OBJECTS_DIR=generated_files
 MOC_DIR=generated_files
 
 HEADERS += include/ActionsSlot.hpp \
+           include/utils.hpp \
+           include/Vertex.hpp \
+           include/SphereVertices.hpp \
            include/Animation.hpp \
            include/AnimationFrame.hpp \
            include/CubeOpenGL.hpp \
@@ -56,6 +59,9 @@ FORMS += UI/GenerationOptionsDialog.ui \
          UI/MainWindows.ui \
          UI/NewAnimationDialog.ui
 SOURCES += src/ActionsSlot.cpp \
+           src/utils.cpp \
+           src/Vertex.cpp \
+           src/SphereVertices.cpp \
            src/Animation.cpp \
            src/AnimationFrame.cpp \
            src/CubeOpenGL.cpp \

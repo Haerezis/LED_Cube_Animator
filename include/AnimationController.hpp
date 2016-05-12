@@ -2,6 +2,7 @@
 #define __ANIMATION_CONTROLLER_HPP
 
 #include <QObject>
+#include <QStandardItemModel>
 #include "AnimationFrameController.hpp"
 #include "Animation.hpp"
 #include "ui_MainWindows.h"
@@ -11,7 +12,7 @@ class AnimationController : public QObject
 {
   Q_OBJECT
   public:
-    AnimationController(QMainWindow &mainWindow, Animation &animation, AnimationFrameController &controller);
+    AnimationController(QMainWindow &mainWindow, Ui::MainWindow &mainWindowUi);
     ~AnimationController() {}
 
     void setupConnect(Ui::MainWindow &mainWindow);
@@ -19,13 +20,13 @@ class AnimationController : public QObject
     bool load();
     bool save();
 
-    void setFrame(unsigned int index);
-    void addFrame();
 
     void hasBeenModified(bool val);
 
-    void setCurrentFrame(unsigned int index);
   public slots:
+    void addFrame();
+    void setFrame();
+    void setCurrentFrame();
     bool newAnimation();
     bool openAnimation();
     bool saveAnimation();
@@ -36,12 +37,16 @@ class AnimationController : public QObject
     bool _hasBeenModified;
 
     QMainWindow &_mainWindow;
+    QSpinBox &_duration;
 
     std::string _filepath;
 
-    Animation &_animation;
+    Animation _animation;
+    QStandardItemModel _frameList;
 
-    AnimationFrameController &_frameController;
+    AnimationFrame _frame;
+    AnimationFrameController _frameController;
+
 };
 
 #endif
