@@ -109,11 +109,6 @@ void CubeOpenGL::initializeGL()
 	vertexColorID = glGetAttribLocation(programID, "vertexColor");
 	mvpID = glGetUniformLocation(programID, "MVP");
 
-	//glGenBuffers(1, &vertexBuffer);
-	//glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  //glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 9, g_vertex_buffer_data, GL_STATIC_DRAW);
-
-
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount, vertexBufferData.get(), GL_STATIC_DRAW);

@@ -32,6 +32,7 @@ class AnimationController : public QObject
     bool saveAnimation();
     bool saveAnimationAs();
     bool generateData();
+    bool quitApplication();
 
   private:
     bool _hasBeenModified;

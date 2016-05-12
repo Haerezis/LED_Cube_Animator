@@ -78,6 +78,7 @@ void AnimationController::setupConnect(Ui::MainWindow &mainWindow)
   QObject::connect(mainWindow.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
   QObject::connect(mainWindow.actionSave_Animation_As, SIGNAL(triggered()), this, SLOT(saveAnimationAs()));
   QObject::connect(mainWindow.actionGenerate_C_data, SIGNAL(triggered()), this, SLOT(generateData()));
+  QObject::connect(mainWindow.actionQuit, SIGNAL(triggered()), this, SLOT(quitApplication()));
 
   QObject::connect(mainWindow.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
   QObject::connect(mainWindow.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
@@ -207,6 +208,14 @@ bool AnimationController::generateData()
       _animation.generate(file, dataFormat, dataSize);
     }
   }
+  return true;
+}
+
+
+bool AnimationController::quitApplication()
+{
+  //TODO Check if current animation is not saved.
+  QApplication::quit();
   return true;
 }
 
