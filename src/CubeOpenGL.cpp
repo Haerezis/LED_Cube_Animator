@@ -76,6 +76,12 @@ CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) : QOpenGLWidget(pare
 
 }
 
+
+void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
+{
+  _currentFrame = frame;
+}
+
 void CubeOpenGL::initializeGL()
 {
   std::ifstream vertexShaderFile, fragmentShaderFile;
@@ -193,7 +199,7 @@ void CubeOpenGL::resizeGL(int w, int h)
 	QMatrix4x4 projection, view, model;
   projection.perspective(45.0f, static_cast<float>(w) / static_cast<float>(h), 0.1f, 100.0f);
 	view.lookAt(
-								QVector3D(4,3,-3), // Camera is at (4,3,-3), in World Space
+								QVector3D(0,0,-3), // Camera is at (4,3,-3), in World Space
 								QVector3D(0,0,0), // and looks at the origin
 								QVector3D(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 						   );
@@ -284,4 +290,16 @@ void CubeOpenGL::LoadShaders(std::istream& vertexShaderStream, std::istream& fra
 	
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
+}
+
+
+void paintLED(const QVector3D& translation)
+{
+
+}
+
+
+void paintLEDCube()
+{
+
 }

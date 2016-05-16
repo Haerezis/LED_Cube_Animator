@@ -5,6 +5,7 @@
 #include <QStandardItemModel>
 #include "AnimationFrameController.hpp"
 #include "Animation.hpp"
+#include "CubeOpenGL.hpp"
 #include "ui_MainWindows.h"
 
 
@@ -37,8 +38,9 @@ class AnimationController : public QObject
   private:
     bool _hasBeenModified;
 
-    QMainWindow &_mainWindow;
-    QSpinBox &_duration;
+    QMainWindow& _mainWindow;
+    QSpinBox& _duration;
+    CubeOpenGL& _cubeOpenGL;
 
     std::string _filepath;
 
@@ -46,8 +48,6 @@ class AnimationController : public QObject
     QStandardItemModel _frameList;
 
     AnimationFrame _frame;
-    AnimationFrameController _frameController;
-
 };
 
 #endif

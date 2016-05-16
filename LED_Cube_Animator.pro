@@ -27,7 +27,7 @@ HEADERS += include/ActionsSlot.hpp \
            include/AnimationFrame.hpp \
            include/CubeOpenGL.hpp \
            include/AnimationController.hpp \
-           include/AnimationFrameController.hpp \
+#           include/AnimationFrameController.hpp \
            include/rapidjson/allocators.h \
            include/rapidjson/document.h \
            include/rapidjson/encodedstream.h \
@@ -66,7 +66,7 @@ SOURCES += src/ActionsSlot.cpp \
            src/AnimationFrame.cpp \
            src/CubeOpenGL.cpp \
            src/AnimationController.cpp \
-           src/AnimationFrameController.cpp \
+#           src/AnimationFrameController.cpp \
            src/main.cpp
 RESOURCES += qdarkstyle/style.qrc
 

@@ -12,13 +12,13 @@
 #include "ui_GenerationOptionsDialog.h"
 #include "ui_NewAnimationDialog.h"
 
-AnimationController::AnimationController(QMainWindow &mainWindow, Ui::MainWindow &mainWindowUi) :
+AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow& mainWindowUi) :
   _hasBeenModified(false),
   _mainWindow(mainWindow),
   _duration(*mainWindowUi.duration),
+  _cubeOpenGL(*mainWindowUi.cubeOpenGL),
   _animation(3),
-  _frame(3),
-  _frameController(_frame)
+  _frame(3)
 {
   QHeaderView *header = mainWindowUi.frame_list->horizontalHeader();
   header->setSectionResizeMode(QHeaderView::Stretch);
@@ -27,33 +27,36 @@ AnimationController::AnimationController(QMainWindow &mainWindow, Ui::MainWindow
   mainWindowUi.frame_list->setModel(&_frameList);
 
   QStandardItem *it = nullptr;
-  //it = new QStandardItem("ID");
-  //_frameList.setHorizontalHeaderItem(0,it);
+  it = new QStandardItem("ID");
+  _frameList.setHorizontalHeaderItem(0,it);
   it = new QStandardItem("Duration");
   _frameList.setHorizontalHeaderItem(0,it);
+
+  _cubeOpenGL.setAnimationFrame(&_frame);
 }
 
 
 void AnimationController::setFrame()
 {
   unsigned int index = 0;
+  //TODO get selected frames from list.
   auto frames = _animation.frames();
   if(index >= frames.size())
     return;
 
-  frames[index] = _frameController.frame();
-  _frameController.clear();
+  frames[index] = _frame;
+  _frame.clear();
   hasBeenModified(true);
 }
 
 void AnimationController::addFrame()
 {
-  _frameController.frame().duration(_duration.value());
-  _frameList.appendRow(new QStandardItem(QString::number(_frameController.frame().duration())));
-  _animation.frames().push_back(_frameController.frame());
+  _frame.duration(_duration.value());
+  _frameList.appendRow(new QStandardItem(QString::number(_frame.duration())));
+  _animation.frames().push_back(_frame);
 
 
-  _frameController.clear();
+  _frame.clear();
   hasBeenModified(true);
 }
 
@@ -64,15 +67,14 @@ void AnimationController::setCurrentFrame()
   if(index >= frames.size())
     return;
 
-  _frameController.frame(frames[index]);
+  _frame = frames[index];
+  //Call _cubeOpenGL paintGL
 }
 
 
 
 void AnimationController::setupConnect(Ui::MainWindow &mainWindow)
 {
-  _frameController.setupConnect(mainWindow);
-
   QObject::connect(mainWindow.actionNew_Animation, SIGNAL(triggered()), this, SLOT(newAnimation()));
   QObject::connect(mainWindow.actionOpen_Animation, SIGNAL(triggered()), this, SLOT(openAnimation()));
   QObject::connect(mainWindow.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
@@ -94,7 +96,7 @@ bool AnimationController::load()
 
   if(!_animation.frames().empty())
   {
-    _frameController.frame(_animation.frames()[0]);
+    _frame = _animation.frames()[0];
   }
   
   hasBeenModified(false);
