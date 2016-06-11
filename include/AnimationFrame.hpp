@@ -24,6 +24,7 @@ class AnimationFrame
     void set(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
     void clear();
     unsigned int duration();
+    unsigned int size();
     void duration(unsigned int value);
     void loadFromJSON(const rapidjson::Value &object);
     rapidjson::Value saveToJSON(rapidjson::Document::AllocatorType &allocator);

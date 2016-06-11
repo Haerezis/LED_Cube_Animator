@@ -49,6 +49,13 @@ unsigned int AnimationFrame::duration()
 {
   return _duration;
 }
+
+
+unsigned int AnimationFrame::size()
+{
+  return _cubeData.size();
+}
+
 void AnimationFrame::duration(unsigned int value)
 {
   if(value == 0) value = 1;

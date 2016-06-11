@@ -68,7 +68,7 @@ void AnimationController::setCurrentFrame()
     return;
 
   _frame = frames[index];
-  //Call _cubeOpenGL paintGL
+  _cubeOpenGL.update();
 }
 
 

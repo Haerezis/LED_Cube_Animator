@@ -2,14 +2,19 @@
 #include <fstream>
 #include <cstdlib>
 
+#include <QMouseEvent>
+#include <QPoint>
+#include <QQuaternion>
 #include "CubeOpenGL.hpp"
 #include "SphereVertices.hpp"
 
-GLfloat CubeOpenGL::g_vertex_buffer_data[] = { 
+GLfloat CubeOpenGL::_vertex_buffer_data[] = { 
 		-1.0f, -1.0f, 0.0f,
 		 1.0f, -1.0f, 0.0f,
 		 0.0f,  1.0f, 0.0f,
-	};
+};
+
+const float CubeOpenGL::RotationAngleTick = 15.0f;
 
 void load(std::unique_ptr<GLfloat>& dst, unsigned int& dstCount)
 {
@@ -59,23 +64,59 @@ void load(std::unique_ptr<GLfloat>& dst, unsigned int& dstCount)
     dst.get()[i] = g_vertex_buffer_data[i];
 }
 
-CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) : QOpenGLWidget(parent, f)
+CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
+  QOpenGLWidget(parent, f),
+  _distanceBetweenLED(5.0f),
+  _mousePressed(false)
 {
   SphereVertices sphere;
-  //sphere.normalize(3);
-  sphere.getFacesVertices(vertexBufferData, vertexCount);
+  sphere.normalize(3);
+  sphere.getFacesVertices(_vertexBufferData, _vertexCount);
   //load(vertexBufferData, vertexCount);
 
-  vertexColorBufferData.reset(new GLfloat[vertexCount]);
-  for(unsigned int i = 0 ; i < (vertexCount / 3) ; i++)
+  _vertexColorBufferData.reset(new GLfloat[_vertexCount]);
+  for(unsigned int i = 0 ; i < (_vertexCount / 3) ; i++)
   {
-    vertexColorBufferData.get()[i*3 + 0] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
-    vertexColorBufferData.get()[i*3 + 1] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
-    vertexColorBufferData.get()[i*3 + 2] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+    _vertexColorBufferData.get()[i*3 + 0] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+    _vertexColorBufferData.get()[i*3 + 1] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+    _vertexColorBufferData.get()[i*3 + 2] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
   }
 
+  this->setFocusPolicy(Qt::StrongFocus);
 }
 
+void printQVector3D(const QVector3D& v)
+{
+  std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
+}
+
+void CubeOpenGL::keyPressEvent(QKeyEvent * event)
+{
+  static const QVector3D xAxis(1.0f, 0.0f, 0.0f);
+  static const QVector3D yAxis(0.0f, 1.0f, 0.0f);
+
+  switch(event->key())
+  {
+    case Qt::Key_2:
+      _cubeRotationMatrix.rotate(CubeOpenGL::RotationAngleTick, xAxis);
+      break;
+    case Qt::Key_4:
+      _cubeRotationMatrix.rotate(CubeOpenGL::RotationAngleTick, yAxis);
+      break;
+    case Qt::Key_5:
+      _cubeRotationMatrix.setToIdentity();
+      break;
+    case Qt::Key_6:
+      _cubeRotationMatrix.rotate(-CubeOpenGL::RotationAngleTick, yAxis);
+      break;
+    case Qt::Key_8:
+      _cubeRotationMatrix.rotate(-CubeOpenGL::RotationAngleTick, xAxis);
+      break;
+    default:
+      break;
+  }
+  update();
+}
 
 void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
 {
@@ -102,7 +143,7 @@ void CubeOpenGL::initializeGL()
   fragmentShaderFile.open("shaders/ColorFragmentShader.fragmentshader");
   if(vertexShaderFile.good() && fragmentShaderFile.good())
   {
-    LoadShaders(vertexShaderFile, fragmentShaderFile);
+    loadShaders(vertexShaderFile, fragmentShaderFile);
   }
   else
   {
@@ -111,17 +152,18 @@ void CubeOpenGL::initializeGL()
   }
 
 	// Get a handle for our buffers
-	vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
-	vertexColorID = glGetAttribLocation(programID, "vertexColor");
-	mvpID = glGetUniformLocation(programID, "MVP");
+	_vertexPosition_modelspaceID = glGetAttribLocation(_programID, "vertexPosition_modelspace");
+	_vertexColorID = glGetAttribLocation(_programID, "vertexColor");
+	_viewProjectionMatrixID = glGetUniformLocation(_programID, "ViewProjection");
+	_modelMatrixID = glGetUniformLocation(_programID, "Model");
 
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount, vertexBufferData.get(), GL_STATIC_DRAW);
+	glGenBuffers(1, &_vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vertexCount, _vertexBufferData.get(), GL_STATIC_DRAW);
 
-	glGenBuffers(1, &colorBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexCount, vertexColorBufferData.get(), GL_STATIC_DRAW);
+	glGenBuffers(1, &_colorBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _vertexCount, _vertexColorBufferData.get(), GL_STATIC_DRAW);
 }
 
 void CubeOpenGL::paintGL_()
@@ -130,13 +172,13 @@ void CubeOpenGL::paintGL_()
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
   // Use our shader
-  glUseProgram(programID);
+  glUseProgram(_programID);
 
   // 1rst attribute buffer : vertices
-  glEnableVertexAttribArray(vertexPosition_modelspaceID);
-  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+  glEnableVertexAttribArray(_vertexPosition_modelspaceID);
+  glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
   glVertexAttribPointer(
-    vertexPosition_modelspaceID, // The attribute we want to configure
+    _vertexPosition_modelspaceID, // The attribute we want to configure
     3,                  // size
     GL_FLOAT,           // type
     GL_FALSE,           // normalized?
@@ -147,68 +189,32 @@ void CubeOpenGL::paintGL_()
   // Draw the triangle !
   glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
 
-  glDisableVertexAttribArray(vertexPosition_modelspaceID);
+  glDisableVertexAttribArray(_vertexPosition_modelspaceID);
 }
 
 
 void CubeOpenGL::paintGL()
 {
-		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Use our shader
-		glUseProgram(programID);
-
-		// Send our transformation to the currently bound shader, 
-		// in the "MVP" uniform
-		glUniformMatrix4fv(mvpID, 1, GL_FALSE, mvp.data());
-
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(vertexPosition_modelspaceID);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		glVertexAttribPointer(
-			vertexPosition_modelspaceID, // The attribute we want to configure
-			3,                           // size
-			GL_FLOAT,                    // type
-			GL_FALSE,                    // normalized?
-			0,                           // stride
-			(void*)0                     // array buffer offset
-		);
-
-		// 2nd attribute buffer : colors
-    glEnableVertexAttribArray(vertexColorID);
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glVertexAttribPointer(
-      vertexColorID,               // The attribute we want to configure
-      3,                           // size
-      GL_FLOAT,                    // type
-      GL_FALSE,                    // normalized?
-      0,                           // stride
-      (void*)0                     // array buffer offset
-    );
-
-		// Draw the triangleS !
-		glDrawArrays(GL_TRIANGLES, 0, vertexCount/3); // 12*3 indices starting at 0 -> 12 triangles
-
-		glDisableVertexAttribArray(vertexPosition_modelspaceID);
-		glDisableVertexAttribArray(vertexColorID);
+  paintLEDCube();
 }
 
 void CubeOpenGL::resizeGL(int w, int h)
 {
-	QMatrix4x4 projection, view, model;
-  projection.perspective(45.0f, static_cast<float>(w) / static_cast<float>(h), 0.1f, 100.0f);
+	QMatrix4x4 projection, view;
+  projection.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), 0.1f, 50.0f);
+  //projection.ortho(-8.0, 8.0, -5.5, 5.5, 0.1f, 100.0f);
 	view.lookAt(
-								QVector3D(0,0,-3), // Camera is at (4,3,-3), in World Space
-								QVector3D(0,0,0), // and looks at the origin
+								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
+								QVector3D(0,0,-10), // and looks at the origin
 								QVector3D(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
 						   );
-	model.setToIdentity();
-	mvp = projection * view * model;
+	_modelMatrix.setToIdentity();
+  _modelMatrix.scale(0.5f, 0.5f, 0.5f);
+	_viewProjectionMatrix = projection * view;
 }
 
 
-void CubeOpenGL::LoadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream){
+void CubeOpenGL::loadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream){
 
 	// Create the shaders
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -271,35 +277,124 @@ void CubeOpenGL::LoadShaders(std::istream& vertexShaderStream, std::istream& fra
 
 	// Link the program
   std::cout << "Creating and linking program" << std::endl;
-  programID = glCreateProgram();
-	glAttachShader(programID, vertexShaderID);
-	glAttachShader(programID, fragmentShaderID);
-	glLinkProgram(programID);
+  _programID = glCreateProgram();
+	glAttachShader(_programID, vertexShaderID);
+	glAttachShader(_programID, fragmentShaderID);
+	glLinkProgram(_programID);
 
 	// Check the program
-	glGetProgramiv(programID, GL_LINK_STATUS, &result);
+	glGetProgramiv(_programID, GL_LINK_STATUS, &result);
 	if (result != GL_TRUE) {
-    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
+    glGetProgramiv(_programID, GL_INFO_LOG_LENGTH, &infoLogLength);
 		std::vector<char> programErrorMessage(infoLogLength+1);
-		glGetProgramInfoLog(programID, infoLogLength, NULL, &programErrorMessage[0]);
+		glGetProgramInfoLog(_programID, infoLogLength, NULL, &programErrorMessage[0]);
     std::cerr << "[ERROR] Program linking failure : " << &programErrorMessage[0] << std::endl;
 	}
 	
-	glDetachShader(programID, vertexShaderID);
-	glDetachShader(programID, fragmentShaderID);
+	glDetachShader(_programID, vertexShaderID);
+	glDetachShader(_programID, fragmentShaderID);
 	
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
 }
 
 
-void paintLED(const QVector3D& translation)
+void CubeOpenGL::paintLED(const QVector3D& translation)
 {
+  QMatrix4x4 model(_modelMatrix);
+  model.translate(translation);
+  model = _cubeRotationMatrix * model;
+  glUniformMatrix4fv(_modelMatrixID, 1, GL_FALSE, model.data());
 
+  // 1rst attribute buffer : vertices
+  glEnableVertexAttribArray(_vertexPosition_modelspaceID);
+  glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+  glVertexAttribPointer(
+    _vertexPosition_modelspaceID, // The attribute we want to configure
+    3,                           // size
+    GL_FLOAT,                    // type
+    GL_FALSE,                    // normalized?
+    0,                           // stride
+    (void*)0                     // array buffer offset
+  );
+
+  // 2nd attribute buffer : colors
+  glEnableVertexAttribArray(_vertexColorID);
+  glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
+  glVertexAttribPointer(
+    _vertexColorID,               // The attribute we want to configure
+    3,                           // size
+    GL_FLOAT,                    // type
+    GL_FALSE,                    // normalized?
+    0,                           // stride
+    (void*)0                     // array buffer offset
+  );
+
+  // Draw the triangleS !
+  glDrawArrays(GL_TRIANGLES, 0, _vertexCount/3);
+
+  glDisableVertexAttribArray(_vertexPosition_modelspaceID);
+  glDisableVertexAttribArray(_vertexColorID);
 }
 
 
-void paintLEDCube()
+void CubeOpenGL::paintLEDCube()
 {
+  // Clear the screen
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  // Use our shader
+  glUseProgram(_programID);
+
+  glUniformMatrix4fv(_viewProjectionMatrixID, 1, GL_FALSE, _viewProjectionMatrix.data());
+
+  if(_currentFrame != nullptr)
+  {
+    unsigned int cubeSize = _currentFrame->size();
+
+    //DEBUG
+    cubeSize = 3;
+
+    const float cubeDimension = (cubeSize-1) * _distanceBetweenLED;
+    const QVector3D cubeOriginOffset = QVector3D(-cubeDimension/2.0, -cubeDimension/2.0, -cubeDimension/2.0);
+    const QVector3D distanceLedVector(_distanceBetweenLED, _distanceBetweenLED, _distanceBetweenLED);
+
+    for(unsigned int floor = 0 ; floor < cubeSize ; floor++)
+    {
+      for(unsigned int line = 0 ; line < cubeSize ; line++)
+      {
+        for(unsigned int column = 0 ; column < cubeSize ; column++)
+        {
+          QVector3D ledPosition = cubeOriginOffset + QVector3D(floor, column, line) * distanceLedVector;
+          
+          if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
+          {
+            setLedOnMode();
+          }
+          else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
+          {
+            setLedOffMode();
+          }
+          else
+          {
+            std::cout << "Unknown LED state" << std::endl;
+            continue;
+          }
+    
+          paintLED(ledPosition);
+        }
+      }
+    }
+  }
+}
+
+
+void CubeOpenGL::setLedOnMode()
+{
+//TODO
+}
+
+void CubeOpenGL::setLedOffMode()
+{
+//TODO
 }

@@ -17,6 +17,8 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     CubeOpenGL(QWidget * parent = 0, Qt::WindowFlags f = 0);
 
     void setAnimationFrame(AnimationFrame* frame);
+    
+    static const float RotationAngleTick;
 
   protected:
     virtual void initializeGL();
@@ -24,30 +26,41 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     virtual void paintGL_();
     virtual void resizeGL(int w, int h);
     
-    void LoadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream);
+    void loadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream);
+
+    void setLedOnMode();
+    void setLedOffMode();
 
     void paintLED(const QVector3D& translation = QVector3D(0,0,0));
     void paintLEDCube();
 
+    void keyPressEvent(QKeyEvent * event);
 
   protected:
-    GLuint programID;
-    GLuint vertexPosition_modelspaceID;
-    GLuint vertexColorID;
-    GLuint mvpID;
+    GLuint _programID;
+    GLuint _vertexPosition_modelspaceID;
+    GLuint _vertexColorID;
+    GLuint _viewProjectionMatrixID;
+    GLuint _modelMatrixID;
 
-    GLuint vertexBuffer;
-    GLuint colorBuffer;
+    GLuint _vertexBuffer;
+    GLuint _colorBuffer;
 
-    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> vertexBufferData;
-    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> vertexColorBufferData;
-    unsigned int vertexCount;
+    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> _vertexBufferData;
+    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> _vertexColorBufferData;
+    unsigned int _vertexCount;
+    float _distanceBetweenLED;
 
-    QMatrix4x4 mvp;
+    QMatrix4x4 _cubeRotationMatrix;
+    QMatrix4x4 _modelMatrix;
+    QMatrix4x4 _viewProjectionMatrix;
     
-    static GLfloat g_vertex_buffer_data[];
+    static GLfloat _vertex_buffer_data[];
 
     AnimationFrame* _currentFrame;
+    QPoint _lastMousePosition;
+    bool _mousePressed;
+
 };
 
 #endif // CUBEOPENGL_H
