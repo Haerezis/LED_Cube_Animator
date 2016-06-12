@@ -94,6 +94,7 @@ void CubeOpenGL::keyPressEvent(QKeyEvent * event)
 {
   static const QVector3D xAxis(1.0f, 0.0f, 0.0f);
   static const QVector3D yAxis(0.0f, 1.0f, 0.0f);
+  static const QVector3D zAxis(0.0f, 0.0f, 1.0f);
 
   switch(event->key())
   {
@@ -103,14 +104,26 @@ void CubeOpenGL::keyPressEvent(QKeyEvent * event)
     case Qt::Key_4:
       _cubeRotationMatrix.rotate(CubeOpenGL::RotationAngleTick, yAxis);
       break;
-    case Qt::Key_5:
-      _cubeRotationMatrix.setToIdentity();
-      break;
     case Qt::Key_6:
       _cubeRotationMatrix.rotate(-CubeOpenGL::RotationAngleTick, yAxis);
       break;
     case Qt::Key_8:
       _cubeRotationMatrix.rotate(-CubeOpenGL::RotationAngleTick, xAxis);
+      break;
+    case Qt::Key_1:
+      _cubeRotationMatrix.setToIdentity();
+      //Z top, X right
+      _cubeRotationMatrix.rotate(-90.0f, xAxis);
+      break;
+    case Qt::Key_3:
+      //Z top, Y right
+      _cubeRotationMatrix.setToIdentity();
+      _cubeRotationMatrix.rotate(-90.0f, zAxis);
+      _cubeRotationMatrix.rotate(-90.0f, xAxis);
+      break;
+    case Qt::Key_7:
+      //Y top, X right
+      _cubeRotationMatrix.setToIdentity();
       break;
     default:
       break;
