@@ -23,7 +23,6 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
   protected:
     virtual void initializeGL();
     virtual void paintGL();
-    virtual void paintGL_();
     virtual void resizeGL(int w, int h);
     
     void loadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream);
@@ -38,10 +37,9 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
 
   protected:
     GLuint _programID;
-    GLuint _vertexPosition_modelspaceID;
+    GLuint _vertexPositionID;
     GLuint _vertexColorID;
-    GLuint _viewProjectionMatrixID;
-    GLuint _modelMatrixID;
+    GLuint _mvpMatrixID;
 
     GLuint _vertexBuffer;
     GLuint _colorBuffer;
@@ -53,7 +51,8 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
 
     QMatrix4x4 _cubeRotationMatrix;
     QMatrix4x4 _modelMatrix;
-    QMatrix4x4 _viewProjectionMatrix;
+    QMatrix4x4 _viewMatrix;
+    QMatrix4x4 _projectionMatrix;
     
     static GLfloat _vertex_buffer_data[];
 
@@ -61,6 +60,8 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     QPoint _lastMousePosition;
     bool _mousePressed;
 
+    static const float _nearPlaneDepth;
+    static const float _farPlaneDepth;
 };
 
 #endif // CUBEOPENGL_H

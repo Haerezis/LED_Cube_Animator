@@ -8,61 +8,9 @@
 #include "CubeOpenGL.hpp"
 #include "SphereVertices.hpp"
 
-GLfloat CubeOpenGL::_vertex_buffer_data[] = { 
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f,
-};
-
 const float CubeOpenGL::RotationAngleTick = 15.0f;
-
-void load(std::unique_ptr<GLfloat>& dst, unsigned int& dstCount)
-{
-	static const GLfloat g_vertex_buffer_data[] = { 
-		-1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f,-1.0f,
-		 1.0f,-1.0f,-1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f,
-		 1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
-		 1.0f,-1.0f, 1.0f
-	};
-
-  dstCount = sizeof(g_vertex_buffer_data) / sizeof(float);
-  dst.reset(new GLfloat[dstCount]);
-
-  for(unsigned int i = 0; i<dstCount ; i++)
-    dst.get()[i] = g_vertex_buffer_data[i];
-}
+const float CubeOpenGL::_nearPlaneDepth = 0.1f;
+const float CubeOpenGL::_farPlaneDepth = 100.0f;
 
 CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
   QOpenGLWidget(parent, f),
@@ -72,7 +20,6 @@ CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
   SphereVertices sphere;
   sphere.normalize(3);
   sphere.getFacesVertices(_vertexBufferData, _vertexCount);
-  //load(vertexBufferData, vertexCount);
 
   _vertexColorBufferData.reset(new GLfloat[_vertexCount]);
   for(unsigned int i = 0 ; i < (_vertexCount / 3) ; i++)
@@ -83,11 +30,6 @@ CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
   }
 
   this->setFocusPolicy(Qt::StrongFocus);
-}
-
-void printQVector3D(const QVector3D& v)
-{
-  std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
 }
 
 void CubeOpenGL::keyPressEvent(QKeyEvent * event)
@@ -165,10 +107,9 @@ void CubeOpenGL::initializeGL()
   }
 
 	// Get a handle for our buffers
-	_vertexPosition_modelspaceID = glGetAttribLocation(_programID, "vertexPosition_modelspace");
+	_vertexPositionID = glGetAttribLocation(_programID, "vertexPosition");
 	_vertexColorID = glGetAttribLocation(_programID, "vertexColor");
-	_viewProjectionMatrixID = glGetUniformLocation(_programID, "ViewProjection");
-	_modelMatrixID = glGetUniformLocation(_programID, "Model");
+	_mvpMatrixID = glGetUniformLocation(_programID, "MVP");
 
 	glGenBuffers(1, &_vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
@@ -177,32 +118,15 @@ void CubeOpenGL::initializeGL()
 	glGenBuffers(1, &_colorBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _vertexCount, _vertexColorBufferData.get(), GL_STATIC_DRAW);
-}
 
-void CubeOpenGL::paintGL_()
-{
-  // Clear the screen
-  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-  // Use our shader
-  glUseProgram(_programID);
-
-  // 1rst attribute buffer : vertices
-  glEnableVertexAttribArray(_vertexPosition_modelspaceID);
-  glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-  glVertexAttribPointer(
-    _vertexPosition_modelspaceID, // The attribute we want to configure
-    3,                  // size
-    GL_FLOAT,           // type
-    GL_FALSE,           // normalized?
-    0,                  // stride
-    (void*)0            // array buffer offset
-  );
-
-  // Draw the triangle !
-  glDrawArrays(GL_TRIANGLES, 0, 3); // 3 indices starting at 0 -> 1 triangle
-
-  glDisableVertexAttribArray(_vertexPosition_modelspaceID);
+	
+  _viewMatrix.lookAt(
+								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
+								QVector3D(0,0,0), // and looks at the origin
+								QVector3D(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+						   );
+  
+  _modelMatrix.scale(0.5f, 0.5f, 0.5f);
 }
 
 
@@ -213,17 +137,8 @@ void CubeOpenGL::paintGL()
 
 void CubeOpenGL::resizeGL(int w, int h)
 {
-	QMatrix4x4 projection, view;
-  projection.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), 0.1f, 50.0f);
-  //projection.ortho(-8.0, 8.0, -5.5, 5.5, 0.1f, 100.0f);
-	view.lookAt(
-								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
-								QVector3D(0,0,-10), // and looks at the origin
-								QVector3D(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-						   );
-	_modelMatrix.setToIdentity();
-  _modelMatrix.scale(0.5f, 0.5f, 0.5f);
-	_viewProjectionMatrix = projection * view;
+  _projectionMatrix.setToIdentity();
+  _projectionMatrix.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), _nearPlaneDepth, _farPlaneDepth);
 }
 
 
@@ -314,16 +229,21 @@ void CubeOpenGL::loadShaders(std::istream& vertexShaderStream, std::istream& fra
 
 void CubeOpenGL::paintLED(const QVector3D& translation)
 {
-  QMatrix4x4 model(_modelMatrix);
-  model.translate(translation);
-  model = _cubeRotationMatrix * model;
-  glUniformMatrix4fv(_modelMatrixID, 1, GL_FALSE, model.data());
+  QMatrix4x4 mvp;
+
+  mvp = _modelMatrix;
+  mvp.translate(translation);
+  mvp = _cubeRotationMatrix * mvp;
+  mvp = _viewMatrix * mvp;
+  mvp = _projectionMatrix * mvp;
+
+  glUniformMatrix4fv(_mvpMatrixID, 1, GL_FALSE, mvp.data());
 
   // 1rst attribute buffer : vertices
-  glEnableVertexAttribArray(_vertexPosition_modelspaceID);
+  glEnableVertexAttribArray(_vertexPositionID);
   glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
   glVertexAttribPointer(
-    _vertexPosition_modelspaceID, // The attribute we want to configure
+    _vertexPositionID, // The attribute we want to configure
     3,                           // size
     GL_FLOAT,                    // type
     GL_FALSE,                    // normalized?
@@ -346,7 +266,7 @@ void CubeOpenGL::paintLED(const QVector3D& translation)
   // Draw the triangleS !
   glDrawArrays(GL_TRIANGLES, 0, _vertexCount/3);
 
-  glDisableVertexAttribArray(_vertexPosition_modelspaceID);
+  glDisableVertexAttribArray(_vertexPositionID);
   glDisableVertexAttribArray(_vertexColorID);
 }
 
@@ -358,8 +278,6 @@ void CubeOpenGL::paintLEDCube()
 
   // Use our shader
   glUseProgram(_programID);
-
-  glUniformMatrix4fv(_viewProjectionMatrixID, 1, GL_FALSE, _viewProjectionMatrix.data());
 
   if(_currentFrame != nullptr)
   {
