@@ -9,12 +9,12 @@
 #include "SphereVertices.hpp"
 
 const float CubeOpenGL::RotationAngleTick = 15.0f;
-const float CubeOpenGL::_nearPlaneDepth = 0.1f;
-const float CubeOpenGL::_farPlaneDepth = 100.0f;
+const float CubeOpenGL::_NearPlaneDepth = 0.1f;
+const float CubeOpenGL::_FarPlaneDepth = 100.0f;
+const float CubeOpenGL::_DistanceBetweenLED = 5.0f;
 
 CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
   QOpenGLWidget(parent, f),
-  _distanceBetweenLED(5.0f),
   _mousePressed(false)
 {
   SphereVertices sphere;
@@ -92,8 +92,6 @@ void CubeOpenGL::initializeGL()
 
 
 	// Create and compile our GLSL program from the shaders
-  //vertexShaderFile.open("shaders/SimpleVertexShader.vertexshader");
-  //fragmentShaderFile.open("shaders/SimpleFragmentShader.fragmentshader");
   vertexShaderFile.open("shaders/TransformVertexShader.vertexshader");
   fragmentShaderFile.open("shaders/ColorFragmentShader.fragmentshader");
   if(vertexShaderFile.good() && fragmentShaderFile.good())
@@ -146,6 +144,8 @@ void CubeOpenGL::initializeGL()
 						   );
   
   _modelMatrix.scale(0.5f, 0.5f, 0.5f);
+
+  glUseProgram(_programID);
 }
 
 
@@ -157,7 +157,7 @@ void CubeOpenGL::paintGL()
 void CubeOpenGL::resizeGL(int w, int h)
 {
   _projectionMatrix.setToIdentity();
-  _projectionMatrix.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), _nearPlaneDepth, _farPlaneDepth);
+  _projectionMatrix.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), _NearPlaneDepth, _FarPlaneDepth);
 }
 
 
@@ -268,9 +268,6 @@ void CubeOpenGL::paintLEDCube()
   // Clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // Use our shader
-  glUseProgram(_programID);
-
   if(_currentFrame != nullptr)
   {
     unsigned int cubeSize = _currentFrame->size();
@@ -278,9 +275,9 @@ void CubeOpenGL::paintLEDCube()
     //DEBUG
     cubeSize = 3;
 
-    const float cubeDimension = (cubeSize-1) * _distanceBetweenLED;
+    const float cubeDimension = (cubeSize-1) * _DistanceBetweenLED;
     const QVector3D cubeOriginOffset = QVector3D(-cubeDimension/2.0, -cubeDimension/2.0, -cubeDimension/2.0);
-    const QVector3D distanceLedVector(_distanceBetweenLED, _distanceBetweenLED, _distanceBetweenLED);
+    const QVector3D distanceLedVector(_DistanceBetweenLED, _DistanceBetweenLED, _DistanceBetweenLED);
 
     for(unsigned int floor = 0 ; floor < cubeSize ; floor++)
     {
@@ -292,32 +289,32 @@ void CubeOpenGL::paintLEDCube()
           
           if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
           {
-            setLedOnMode();
+            paintLED(ledPosition);
           }
           else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
           {
-            setLedOffMode();
+            paintLED(ledPosition);
           }
           else
           {
             std::cout << "Unknown LED state" << std::endl;
             continue;
           }
-    
-          paintLED(ledPosition);
         }
       }
     }
   }
 }
 
-
-void CubeOpenGL::setLedOnMode()
+QMatrix4x4 CubeOpenGL::_getMVP(const QVector3D& modelTranslation)
 {
-//TODO
-}
+  QMatrix4x4 mvp;
 
-void CubeOpenGL::setLedOffMode()
-{
-//TODO
+  mvp = _modelMatrix;
+  mvp.translate(modelTranslation);
+  mvp = _cubeRotationMatrix * mvp;
+  mvp = _viewMatrix * mvp;
+  mvp = _projectionMatrix * mvp;
+
+  return mvp;
 }
