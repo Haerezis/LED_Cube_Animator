@@ -111,14 +111,33 @@ void CubeOpenGL::initializeGL()
 	_vertexColorID = glGetAttribLocation(_programID, "vertexColor");
 	_mvpMatrixID = glGetUniformLocation(_programID, "MVP");
 
+  //Initialize and configure vertex position buffer/VAO/Attrib of the model
 	glGenBuffers(1, &_vertexBuffer);
+  glEnableVertexAttribArray(_vertexPositionID);
 	glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vertexCount, _vertexBufferData.get(), GL_STATIC_DRAW);
+  glVertexAttribPointer(
+    _vertexPositionID, // The attribute we want to configure
+    3,                           // size
+    GL_FLOAT,                    // type
+    GL_FALSE,                    // normalized?
+    0,                           // stride
+    (void*)0                     // array buffer offset
+  );
 
+  //Initialize and configure color buffer/VAO/Attrib
 	glGenBuffers(1, &_colorBuffer);
+  glEnableVertexAttribArray(_vertexColorID);
 	glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _vertexCount, _vertexColorBufferData.get(), GL_STATIC_DRAW);
-
+  glVertexAttribPointer(
+    _vertexColorID,               // The attribute we want to configure
+    3,                           // size
+    GL_FLOAT,                    // type
+    GL_FALSE,                    // normalized?
+    0,                           // stride
+    (void*)0                     // array buffer offset
+  );
 	
   _viewMatrix.lookAt(
 								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
@@ -239,35 +258,8 @@ void CubeOpenGL::paintLED(const QVector3D& translation)
 
   glUniformMatrix4fv(_mvpMatrixID, 1, GL_FALSE, mvp.data());
 
-  // 1rst attribute buffer : vertices
-  glEnableVertexAttribArray(_vertexPositionID);
-  glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-  glVertexAttribPointer(
-    _vertexPositionID, // The attribute we want to configure
-    3,                           // size
-    GL_FLOAT,                    // type
-    GL_FALSE,                    // normalized?
-    0,                           // stride
-    (void*)0                     // array buffer offset
-  );
-
-  // 2nd attribute buffer : colors
-  glEnableVertexAttribArray(_vertexColorID);
-  glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
-  glVertexAttribPointer(
-    _vertexColorID,               // The attribute we want to configure
-    3,                           // size
-    GL_FLOAT,                    // type
-    GL_FALSE,                    // normalized?
-    0,                           // stride
-    (void*)0                     // array buffer offset
-  );
-
   // Draw the triangleS !
   glDrawArrays(GL_TRIANGLES, 0, _vertexCount/3);
-
-  glDisableVertexAttribArray(_vertexPositionID);
-  glDisableVertexAttribArray(_vertexColorID);
 }
 
 
