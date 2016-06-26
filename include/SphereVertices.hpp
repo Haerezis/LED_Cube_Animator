@@ -17,7 +17,7 @@ class SphereVertices
     SphereVertices();
 
     void normalize(unsigned int n);
-    void getFacesVertices(std::unique_ptr<float>& dst, unsigned int& dstCount);
+    void getFacesVertices(float*& dst, unsigned int& dstCount);
     void reset();
 
     friend std::ostream& operator<<(std::ostream& out, const SphereVertices& sv);

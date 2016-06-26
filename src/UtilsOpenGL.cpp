@@ -5,6 +5,10 @@
 std::unique_ptr<UtilsOpenGL> UtilsOpenGL::_instance;
 std::once_flag UtilsOpenGL::_once_flag;
 
+UtilsOpenGL::UtilsOpenGL()
+{
+  initializeOpenGLFunctions();
+}
 
 UtilsOpenGL& UtilsOpenGL::instance()
 {

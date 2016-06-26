@@ -50,25 +50,25 @@ void SphereVertices::normalize(unsigned int n)
   }
 }
 
-void SphereVertices::getFacesVertices(std::unique_ptr<float>& dst, unsigned int& dstCount)
+void SphereVertices::getFacesVertices(float*& dst, unsigned int& dstCount)
 {
   dstCount = _sphereFaces.size() * 3 * 3;//Number of faces * Number of vertex per face * Number of coordinates in a Vertex.
-  dst.reset(new float[dstCount]);
+  dst = new float[dstCount];
 
   unsigned int i = 0;
   for(const auto& face : _sphereFaces)
   {
-    dst.get()[i]   = std::get<0>(face).x;
-    dst.get()[i+1] = std::get<0>(face).y;
-    dst.get()[i+2] = std::get<0>(face).z;
+    dst[i]   = std::get<0>(face).x;
+    dst[i+1] = std::get<0>(face).y;
+    dst[i+2] = std::get<0>(face).z;
 
-    dst.get()[i+3] = std::get<1>(face).x;
-    dst.get()[i+4] = std::get<1>(face).y;
-    dst.get()[i+5] = std::get<1>(face).z;
+    dst[i+3] = std::get<1>(face).x;
+    dst[i+4] = std::get<1>(face).y;
+    dst[i+5] = std::get<1>(face).z;
 
-    dst.get()[i+6] = std::get<2>(face).x;
-    dst.get()[i+7] = std::get<2>(face).y;
-    dst.get()[i+8] = std::get<2>(face).z;
+    dst[i+6] = std::get<2>(face).x;
+    dst[i+7] = std::get<2>(face).y;
+    dst[i+8] = std::get<2>(face).z;
 
     i+=9;
   }

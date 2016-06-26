@@ -25,7 +25,11 @@ HEADERS += include/ActionsSlot.hpp \
            include/SphereVertices.hpp \
            include/Animation.hpp \
            include/AnimationFrame.hpp \
+           include/UtilsOpenGL.hpp \
            include/CubeOpenGL.hpp \
+           include/LedOpenGL.hpp \
+           include/LedOnOpenGL.hpp \
+           include/LedOffOpenGL.hpp \
            include/AnimationController.hpp \
 #           include/AnimationFrameController.hpp \
            include/rapidjson/allocators.h \
@@ -64,7 +68,11 @@ SOURCES += src/ActionsSlot.cpp \
            src/SphereVertices.cpp \
            src/Animation.cpp \
            src/AnimationFrame.cpp \
+           src/UtilsOpenGL.cpp \
            src/CubeOpenGL.cpp \
+           src/LedOpenGL.cpp \
+           src/LedOnOpenGL.cpp \
+           src/LedOffOpenGL.cpp \
            src/AnimationController.cpp \
 #           src/AnimationFrameController.cpp \
            src/main.cpp

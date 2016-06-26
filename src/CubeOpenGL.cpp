@@ -17,17 +17,11 @@ CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
   QOpenGLWidget(parent, f),
   _mousePressed(false)
 {
+  float *vertexData;
   SphereVertices sphere;
   sphere.normalize(3);
-  sphere.getFacesVertices(_vertexBufferData, _vertexCount);
-
-  _vertexColorBufferData.reset(new GLfloat[_vertexCount]);
-  for(unsigned int i = 0 ; i < (_vertexCount / 3) ; i++)
-  {
-    _vertexColorBufferData.get()[i*3 + 0] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
-    _vertexColorBufferData.get()[i*3 + 1] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
-    _vertexColorBufferData.get()[i*3 + 2] = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
-  }
+  sphere.getFacesVertices(vertexData, _vertexCount);
+  _vertexBufferData.reset(vertexData);
 
   this->setFocusPolicy(Qt::StrongFocus);
 }
@@ -80,7 +74,6 @@ void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
 
 void CubeOpenGL::initializeGL()
 {
-  std::ifstream vertexShaderFile, fragmentShaderFile;
   initializeOpenGLFunctions();
 	
   // Dark blue background
@@ -90,52 +83,13 @@ void CubeOpenGL::initializeGL()
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS); 
 
+  //Initialize the QOpenGLFunctions of the LedOpenGLs
+  _ledOffOpengl.initializeGL();
+  _ledOnOpengl.initializeGL();
 
-	// Create and compile our GLSL program from the shaders
-  vertexShaderFile.open("shaders/TransformVertexShader.vertexshader");
-  fragmentShaderFile.open("shaders/ColorFragmentShader.fragmentshader");
-  if(vertexShaderFile.good() && fragmentShaderFile.good())
-  {
-    loadShaders(vertexShaderFile, fragmentShaderFile);
-  }
-  else
-  {
-    std::cerr << "Error when trying to open shaders file : " << vertexShaderFile.good() << "," << fragmentShaderFile << std::endl;
-    return;
-  }
-
-	// Get a handle for our buffers
-	_vertexPositionID = glGetAttribLocation(_programID, "vertexPosition");
-	_vertexColorID = glGetAttribLocation(_programID, "vertexColor");
-	_mvpMatrixID = glGetUniformLocation(_programID, "MVP");
-
-  //Initialize and configure vertex position buffer/VAO/Attrib of the model
-	glGenBuffers(1, &_vertexBuffer);
-  glEnableVertexAttribArray(_vertexPositionID);
-	glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vertexCount, _vertexBufferData.get(), GL_STATIC_DRAW);
-  glVertexAttribPointer(
-    _vertexPositionID, // The attribute we want to configure
-    3,                           // size
-    GL_FLOAT,                    // type
-    GL_FALSE,                    // normalized?
-    0,                           // stride
-    (void*)0                     // array buffer offset
-  );
-
-  //Initialize and configure color buffer/VAO/Attrib
-	glGenBuffers(1, &_colorBuffer);
-  glEnableVertexAttribArray(_vertexColorID);
-	glBindBuffer(GL_ARRAY_BUFFER, _colorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _vertexCount, _vertexColorBufferData.get(), GL_STATIC_DRAW);
-  glVertexAttribPointer(
-    _vertexColorID,               // The attribute we want to configure
-    3,                           // size
-    GL_FLOAT,                    // type
-    GL_FALSE,                    // normalized?
-    0,                           // stride
-    (void*)0                     // array buffer offset
-  );
+  //Initialize the data of the LedOpenGLs
+  _ledOffOpengl.initialize(_vertexBufferData, _vertexCount);
+  _ledOnOpengl.initialize(_vertexBufferData, _vertexCount);
 	
   _viewMatrix.lookAt(
 								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
@@ -144,8 +98,6 @@ void CubeOpenGL::initializeGL()
 						   );
   
   _modelMatrix.scale(0.5f, 0.5f, 0.5f);
-
-  glUseProgram(_programID);
 }
 
 
@@ -161,108 +113,6 @@ void CubeOpenGL::resizeGL(int w, int h)
 }
 
 
-void CubeOpenGL::loadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream){
-
-	// Create the shaders
-	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the vertex Shader code from the file
-  std::string vertexShaderSource;
-	if(vertexShaderStream.good()) {
-    vertexShaderSource.assign(std::istreambuf_iterator<char>(vertexShaderStream), {});
-	}
-  else {
-    std::cout << "[ERROR] vertex shader stream is not valid" << std::endl;
-		return;
-	}
-
-	// Read the fragment Shader code from the file
-  std::string fragmentShaderSource;
-	if(fragmentShaderStream.good()) {
-    fragmentShaderSource.assign(std::istreambuf_iterator<char>(fragmentShaderStream), {});
-	}
-  else {
-    std::cout << "[ERROR] fragment shader stream is not valid" << std::endl;
-		return;
-	}
-
-	GLint result = GL_FALSE;
-	int infoLogLength;
-
-
-	// Compile vertex Shader
-  std::cout << "Compiling Vertex Shader" << std::endl;
-	const char * vertexSourcePointer = vertexShaderSource.c_str();
-	glShaderSource(vertexShaderID, 1, &vertexSourcePointer , NULL);
-	glCompileShader(vertexShaderID);
-
-	// Check vertex Shader
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
-	glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-	if (result != GL_TRUE) {
-		std::vector<char> vertexShaderErrorMessage(infoLogLength+1);
-		glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-    std::cerr << "[ERROR] Vertex Shader compilation failure : " << &vertexShaderErrorMessage[0] << std::endl;
-	}
-
-	// Compile fragment Shader
-  std::cout << "Compiling Fragment Shader" << std::endl;
-	const char * fragmentSourcePointer = fragmentShaderSource.c_str();
-	glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer , NULL);
-	glCompileShader(fragmentShaderID);
-
-	// Check fragment Shader
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
-	if (result != GL_TRUE) {
-    glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		std::vector<char> fragmentShaderErrorMessage(infoLogLength+1);
-		glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-    std::cerr << "[ERROR] Fragment Shader compilation failure : " << &fragmentShaderErrorMessage[0] << std::endl;
-	}
-
-
-	// Link the program
-  std::cout << "Creating and linking program" << std::endl;
-  _programID = glCreateProgram();
-	glAttachShader(_programID, vertexShaderID);
-	glAttachShader(_programID, fragmentShaderID);
-	glLinkProgram(_programID);
-
-	// Check the program
-	glGetProgramiv(_programID, GL_LINK_STATUS, &result);
-	if (result != GL_TRUE) {
-    glGetProgramiv(_programID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		std::vector<char> programErrorMessage(infoLogLength+1);
-		glGetProgramInfoLog(_programID, infoLogLength, NULL, &programErrorMessage[0]);
-    std::cerr << "[ERROR] Program linking failure : " << &programErrorMessage[0] << std::endl;
-	}
-	
-	glDetachShader(_programID, vertexShaderID);
-	glDetachShader(_programID, fragmentShaderID);
-	
-	glDeleteShader(vertexShaderID);
-	glDeleteShader(fragmentShaderID);
-}
-
-
-void CubeOpenGL::paintLED(const QVector3D& translation)
-{
-  QMatrix4x4 mvp;
-
-  mvp = _modelMatrix;
-  mvp.translate(translation);
-  mvp = _cubeRotationMatrix * mvp;
-  mvp = _viewMatrix * mvp;
-  mvp = _projectionMatrix * mvp;
-
-  glUniformMatrix4fv(_mvpMatrixID, 1, GL_FALSE, mvp.data());
-
-  // Draw the triangleS !
-  glDrawArrays(GL_TRIANGLES, 0, _vertexCount/3);
-}
-
-
 void CubeOpenGL::paintLEDCube()
 {
   // Clear the screen
@@ -273,7 +123,7 @@ void CubeOpenGL::paintLEDCube()
     unsigned int cubeSize = _currentFrame->size();
 
     //DEBUG
-    cubeSize = 3;
+    //cubeSize = 3;
 
     const float cubeDimension = (cubeSize-1) * _DistanceBetweenLED;
     const QVector3D cubeOriginOffset = QVector3D(-cubeDimension/2.0, -cubeDimension/2.0, -cubeDimension/2.0);
@@ -289,11 +139,11 @@ void CubeOpenGL::paintLEDCube()
           
           if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
           {
-            paintLED(ledPosition);
+            _ledOnOpengl.draw(_getMVP(ledPosition));
           }
           else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
           {
-            paintLED(ledPosition);
+            _ledOffOpengl.draw(_getMVP(ledPosition));
           }
           else
           {

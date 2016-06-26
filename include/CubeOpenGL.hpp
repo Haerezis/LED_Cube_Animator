@@ -10,6 +10,8 @@
 #include <QVector3D>
 
 #include "AnimationFrame.hpp"
+#include "LedOffOpenGL.hpp"
+#include "LedOnOpenGL.hpp"
 
 class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
 {
@@ -25,26 +27,17 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     virtual void paintGL();
     virtual void resizeGL(int w, int h);
     
-    void loadShaders(std::istream& vertexShaderStream, std::istream& fragmentShaderStream);
-
-    void paintLED(const QVector3D& translation = QVector3D(0,0,0));
     void paintLEDCube();
 
-    QMatrix4x4 _getMVP(const QVector3D& modelTranslation);
+    QMatrix4x4 _getMVP(const QVector3D& modelTranslation = QVector3D(0,0,0));
 
     void keyPressEvent(QKeyEvent * event);
 
   protected:
-    GLuint _programID;
-    GLuint _vertexPositionID;
-    GLuint _vertexColorID;
-    GLuint _mvpMatrixID;
+    LedOffOpenGL _ledOffOpengl;
+    LedOnOpenGL _ledOnOpengl;
 
-    GLuint _vertexBuffer;
-    GLuint _colorBuffer;
-
-    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> _vertexBufferData;
-    std::unique_ptr<GLfloat, std::default_delete<GLfloat>> _vertexColorBufferData;
+    std::shared_ptr<GLfloat> _vertexBufferData;
     unsigned int _vertexCount;
 
     QMatrix4x4 _cubeRotationMatrix;

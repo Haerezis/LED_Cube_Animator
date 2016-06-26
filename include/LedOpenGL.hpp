@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <QOpenGLFunctions>
+#include <QOpenGLVertexArrayObject>
 #include <QMatrix4x4>
 
 
@@ -15,24 +16,20 @@ class LedOpenGL  : public QOpenGLFunctions
    
     virtual ~LedOpenGL();
     
+    void initializeGL();
     virtual void initialize(
         std::shared_ptr<GLfloat>& vertexBufferData,
         unsigned int vertexCount);
 
-    void useProgram();
-    
-    virtual void paintLed(const QMatrix4x4& mvp);
+    virtual void draw(const QMatrix4x4& mvp);
 
   //Protected functions
   protected:
     virtual GLuint _loadShaders() = 0;
 
-    virtual void _uninitialize();
-
   //Protected attributes
   protected:
-    bool _initialized;
-
+    QOpenGLVertexArrayObject _vao;
     GLuint _programID;
     GLuint _vertexPositionID;
     GLuint _mvpMatrixID;
