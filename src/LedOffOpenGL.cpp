@@ -17,9 +17,13 @@ void LedOffOpenGL::initialize(
   _vertexColorBufferData.reset(new GLfloat[_vertexCount]);
   for(unsigned int i = 0 ; i < (_vertexCount / 3) ; i++)
   {
-    _vertexColorBufferData.get()[i*3 + 0] = std::max(0.3f, static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX));
+    //_vertexColorBufferData.get()[i*3 + 0] = std::max(0.3f, static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX));
+    //_vertexColorBufferData.get()[i*3 + 1] = 0.0f;
+    //_vertexColorBufferData.get()[i*3 + 2] = 0.0f;
+
+    _vertexColorBufferData.get()[i*3 + 0] = 0.0f;
     _vertexColorBufferData.get()[i*3 + 1] = 0.0f;
-    _vertexColorBufferData.get()[i*3 + 2] = 0.0f;
+    _vertexColorBufferData.get()[i*3 + 2] = std::max(0.2f, 0.4f * (static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX)));
   }
 
 	_vertexColorID = glGetAttribLocation(_programID, "vertexColor");
