@@ -4,6 +4,7 @@
 
 #include <QMouseEvent>
 #include <QPoint>
+#include <QVector4D>
 #include <QQuaternion>
 #include "CubeOpenGL.hpp"
 #include "SphereVertices.hpp"
@@ -14,8 +15,7 @@ const float CubeOpenGL::_FarPlaneDepth = 100.0f;
 const float CubeOpenGL::_DistanceBetweenLED = 5.0f;
 
 CubeOpenGL::CubeOpenGL(QWidget * parent, Qt::WindowFlags f) :
-  QOpenGLWidget(parent, f),
-  _mousePressed(false)
+  QOpenGLWidget(parent, f)
 {
   float *vertexData;
   SphereVertices sphere;
@@ -67,6 +67,12 @@ void CubeOpenGL::keyPressEvent(QKeyEvent * event)
   update();
 }
 
+void CubeOpenGL::mousePressEvent(QMouseEvent * event)
+{
+  QVector3D res = _getMouseRayCast(event->x(), event->y());
+  std::cout << "(" << res.x() << ", " << res.y() << ", " << res.z() << ")" << std::endl;
+}
+
 void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
 {
   _currentFrame = frame;
@@ -86,10 +92,12 @@ void CubeOpenGL::initializeGL()
   //Initialize the QOpenGLFunctions of the LedOpenGLs
   _ledOffOpengl.initializeGL();
   _ledOnOpengl.initializeGL();
+  _ledMonocolorOpengl.initializeGL();
 
   //Initialize the data of the LedOpenGLs
   _ledOffOpengl.initialize(_vertexBufferData, _vertexCount);
   _ledOnOpengl.initialize(_vertexBufferData, _vertexCount);
+  _ledMonocolorOpengl.initialize(_vertexBufferData, _vertexCount);
 	
   _viewMatrix.lookAt(
 								QVector3D(0,0,-25), // Camera is at (4,3,-3), in World Space
@@ -110,6 +118,32 @@ void CubeOpenGL::resizeGL(int w, int h)
 {
   _projectionMatrix.setToIdentity();
   _projectionMatrix.perspective(15.0f, (static_cast<float>(w) / static_cast<float>(h)), _NearPlaneDepth, _FarPlaneDepth);
+  _widgetWidth = w;
+  _widgetHeight = h;
+}
+
+
+QVector3D CubeOpenGL::_getMouseRayCast(unsigned int x, unsigned int y)
+{
+  QVector3D ray_nds;
+  ray_nds.setX((2.0f * static_cast<float>(x)) / static_cast<float>(_widgetWidth) - 1.0f);
+  ray_nds.setY(1.0f - (2.0f * static_cast<float>(y)) / static_cast<float>(_widgetHeight));
+  ray_nds.setZ(1.0f);
+
+  QVector4D ray_clip;
+  ray_clip.setX(ray_nds.x());
+  ray_clip.setY(ray_nds.y());
+  ray_clip.setZ(-1.0f);
+  ray_clip.setW(1.0f);
+
+  QVector4D ray_eye(_projectionMatrix.inverted() * ray_clip);
+  ray_eye.setZ(-1.0f);
+  ray_eye.setW(0.0f);
+  
+  QVector3D ray_wor(_viewMatrix.inverted() * ray_eye);
+  ray_wor.normalize();
+
+  return ray_wor;
 }
 
 
@@ -136,14 +170,16 @@ void CubeOpenGL::paintLEDCube()
         for(unsigned int column = 0 ; column < cubeSize ; column++)
         {
           QVector3D ledPosition = cubeOriginOffset + QVector3D(floor, column, line) * distanceLedVector;
-          
+
           if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
           {
-            _ledOnOpengl.draw(_getMVP(ledPosition));
+            _ledOnOpengl.prepareDraw(_getMVP(ledPosition));
+            _ledOnOpengl.draw();
           }
           else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
           {
-            _ledOffOpengl.draw(_getMVP(ledPosition));
+            _ledOffOpengl.prepareDraw(_getMVP(ledPosition));
+            _ledOffOpengl.draw();
           }
           else
           {

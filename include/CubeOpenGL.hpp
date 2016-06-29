@@ -12,6 +12,7 @@
 #include "AnimationFrame.hpp"
 #include "LedOffOpenGL.hpp"
 #include "LedOnOpenGL.hpp"
+#include "LedMonocolorOpenGL.hpp"
 
 class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
 {
@@ -29,13 +30,17 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     
     void paintLEDCube();
 
+    QVector3D _getMouseRayCast(unsigned int x, unsigned int y);
+
     QMatrix4x4 _getMVP(const QVector3D& modelTranslation = QVector3D(0,0,0));
 
     void keyPressEvent(QKeyEvent * event);
+    void mousePressEvent(QMouseEvent * event);
 
   protected:
     LedOffOpenGL _ledOffOpengl;
     LedOnOpenGL _ledOnOpengl;
+    LedMonocolorOpenGL _ledMonocolorOpengl;
 
     std::shared_ptr<GLfloat> _vertexBufferData;
     unsigned int _vertexCount;
@@ -46,8 +51,8 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     QMatrix4x4 _projectionMatrix;
     
     AnimationFrame* _currentFrame;
-    QPoint _lastMousePosition;
-    bool _mousePressed;
+    unsigned int _widgetWidth;
+    unsigned int _widgetHeight;
 
     static const float _NearPlaneDepth;
     static const float _FarPlaneDepth;

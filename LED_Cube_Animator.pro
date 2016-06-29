@@ -28,6 +28,7 @@ HEADERS += include/ActionsSlot.hpp \
            include/UtilsOpenGL.hpp \
            include/CubeOpenGL.hpp \
            include/LedOpenGL.hpp \
+           include/LedMonocolorOpenGL.hpp \
            include/LedOnOpenGL.hpp \
            include/LedOffOpenGL.hpp \
            include/AnimationController.hpp \
@@ -71,6 +72,7 @@ SOURCES += src/ActionsSlot.cpp \
            src/UtilsOpenGL.cpp \
            src/CubeOpenGL.cpp \
            src/LedOpenGL.cpp \
+           src/LedMonocolorOpenGL.cpp \
            src/LedOnOpenGL.cpp \
            src/LedOffOpenGL.cpp \
            src/AnimationController.cpp \

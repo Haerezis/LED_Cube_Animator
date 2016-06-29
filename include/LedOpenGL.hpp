@@ -21,7 +21,9 @@ class LedOpenGL  : public QOpenGLFunctions
         std::shared_ptr<GLfloat>& vertexBufferData,
         unsigned int vertexCount);
 
-    virtual void draw(const QMatrix4x4& mvp);
+    virtual void prepareDraw(const QMatrix4x4& mvp);
+    
+    void draw();
 
   //Protected functions
   protected:

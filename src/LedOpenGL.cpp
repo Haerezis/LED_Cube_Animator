@@ -50,14 +50,17 @@ void LedOpenGL::initialize(
 }
 
 
-void LedOpenGL::draw(const QMatrix4x4& mvp)
+void LedOpenGL::prepareDraw(const QMatrix4x4& mvp)
 {
   glUseProgram(_programID);
 	// Get a handle for our buffers
   
   //Send the MVP matrix to the program
   glUniformMatrix4fv(_mvpMatrixID, 1, GL_FALSE, mvp.data());
+}
 
+void LedOpenGL::draw()
+{
   _vao.bind();
   
   //Draw model
@@ -65,3 +68,4 @@ void LedOpenGL::draw(const QMatrix4x4& mvp)
 
   _vao.release();
 }
+
