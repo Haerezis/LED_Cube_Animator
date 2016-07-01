@@ -28,7 +28,7 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     virtual void paintGL();
     virtual void resizeGL(int w, int h);
     
-    void paintLEDCube();
+    void paintLEDCube(bool pickingMode = false);
 
     QVector3D _getMouseRayCast(unsigned int x, unsigned int y);
 

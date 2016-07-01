@@ -34,6 +34,17 @@ AnimationFrame::LEDState AnimationFrame::get(unsigned int floor, unsigned int li
   return _cubeData[floor][line][column];
 }
 
+void AnimationFrame::flip(unsigned int floor, unsigned int line, unsigned int column)
+{
+  if(floor >= _cubeData.size()) floor = _cubeData.size()-1;
+  if(line >= _cubeData[floor].size()) line = _cubeData.size()-1;
+  if(column >= _cubeData[floor][line].size()) column = _cubeData.size()-1;
+
+  AnimationFrame::LEDState state = (_cubeData[floor][line][column] == AnimationFrame::LEDState::On) ?
+    AnimationFrame::LEDState::Off : AnimationFrame::LEDState::On;
+
+  _cubeData[floor][line][column] = state;
+}
 
 void AnimationFrame::set(unsigned int floor, unsigned int line, unsigned int column, AnimationFrame::LEDState state)
 {

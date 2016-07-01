@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <thread>
+#include <chrono>
 
 #include <QMouseEvent>
 #include <QPoint>
@@ -69,8 +71,22 @@ void CubeOpenGL::keyPressEvent(QKeyEvent * event)
 
 void CubeOpenGL::mousePressEvent(QMouseEvent * event)
 {
-  QVector3D res = _getMouseRayCast(event->x(), event->y());
-  std::cout << "(" << res.x() << ", " << res.y() << ", " << res.z() << ")" << std::endl;
+  int x = event->x();
+  int y = _widgetHeight - event->y();
+  GLubyte pos[4];
+  
+  makeCurrent();
+  paintLEDCube(true);
+  glFlush();
+  glFinish();
+  glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pos);
+  doneCurrent();
+
+  //(255,255,255) color is the background color (normally) and should be ignored
+  if((pos[0] + pos[1] + pos[2]) < (255 + 255 + 255))
+    _currentFrame->flip(pos[0], pos[1], pos[2]);
+
+  update();
 }
 
 void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
@@ -82,8 +98,6 @@ void CubeOpenGL::initializeGL()
 {
   initializeOpenGLFunctions();
 	
-  // Dark blue background
-	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
@@ -147,8 +161,13 @@ QVector3D CubeOpenGL::_getMouseRayCast(unsigned int x, unsigned int y)
 }
 
 
-void CubeOpenGL::paintLEDCube()
+void CubeOpenGL::paintLEDCube(bool pickingMode)
 {
+  if(pickingMode)
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  else
+    glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
+
   // Clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -163,28 +182,45 @@ void CubeOpenGL::paintLEDCube()
     const QVector3D cubeOriginOffset = QVector3D(-cubeDimension/2.0, -cubeDimension/2.0, -cubeDimension/2.0);
     const QVector3D distanceLedVector(_DistanceBetweenLED, _DistanceBetweenLED, _DistanceBetweenLED);
 
+    QVector3D ledColor;
+    QVector3D ledPosition;
     for(unsigned int floor = 0 ; floor < cubeSize ; floor++)
     {
       for(unsigned int line = 0 ; line < cubeSize ; line++)
       {
         for(unsigned int column = 0 ; column < cubeSize ; column++)
         {
-          QVector3D ledPosition = cubeOriginOffset + QVector3D(floor, column, line) * distanceLedVector;
+          ledPosition = cubeOriginOffset + QVector3D(floor, column, line) * distanceLedVector;
+          QMatrix4x4 mvp = _getMVP(ledPosition);
 
-          if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
+          if(pickingMode)
           {
-            _ledOnOpengl.prepareDraw(_getMVP(ledPosition));
-            _ledOnOpengl.draw();
-          }
-          else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
-          {
-            _ledOffOpengl.prepareDraw(_getMVP(ledPosition));
-            _ledOffOpengl.draw();
+            ledColor.setX(static_cast<float>(floor) / 255.0f);
+            ledColor.setY(static_cast<float>(line) / 255.0f);
+            ledColor.setZ(static_cast<float>(column) / 255.0f);
+
+            //std::cout << ledColor.x() << " " << ledColor.y() << " " << ledColor.z() << std::endl;
+
+            _ledMonocolorOpengl.prepareDraw(mvp, ledColor);
+            _ledMonocolorOpengl.draw();
           }
           else
           {
-            std::cout << "Unknown LED state" << std::endl;
-            continue;
+            if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::On)
+            {
+              _ledOnOpengl.prepareDraw(mvp);
+              _ledOnOpengl.draw();
+            }
+            else if(_currentFrame->get(floor, line, column) == AnimationFrame::LEDState::Off)
+            {
+              _ledOffOpengl.prepareDraw(mvp);
+              _ledOffOpengl.draw();
+            }
+            else
+            {
+              std::cout << "Unknown LED state" << std::endl;
+              continue;
+            }
           }
         }
       }

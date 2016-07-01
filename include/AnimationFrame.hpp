@@ -21,6 +21,7 @@ class AnimationFrame
     ~AnimationFrame() {}
 
     LEDState get(unsigned int floor, unsigned int line, unsigned int column);
+    void flip(unsigned int floor, unsigned int line, unsigned int column);
     void set(unsigned int floor, unsigned int line, unsigned int column, LEDState state);
     void clear();
     unsigned int duration();
