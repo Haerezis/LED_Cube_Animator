@@ -34,6 +34,7 @@ class AnimationController : public QObject
     bool saveAnimationAs();
     bool generateData();
     bool quitApplication();
+    void frameSelected(const QItemSelection & selected, const QItemSelection & deselected);
 
   private:
     bool _hasBeenModified;

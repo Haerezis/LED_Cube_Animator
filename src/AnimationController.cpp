@@ -84,6 +84,20 @@ void AnimationController::setupConnect(Ui::MainWindow &mainWindow)
 
   QObject::connect(mainWindow.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
   QObject::connect(mainWindow.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
+
+  QObject::connect(
+      mainWindow.frame_list->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+      this, SLOT(frameSelected(const QItemSelection &, const QItemSelection &))
+   );
+}
+
+void AnimationController::frameSelected(const QItemSelection & selected, const QItemSelection & deselected)
+{
+  if(!selected.indexes().empty())
+  {
+    //TODO
+    std::cout << selected.indexes().back().row() << std::endl;
+  }
 }
 
 bool AnimationController::load()
@@ -97,6 +111,12 @@ bool AnimationController::load()
   if(!_animation.frames().empty())
   {
     _frame = _animation.frames()[0];
+  }
+
+  _frameList.removeRows(0, _frameList.rowCount());
+  for(auto& frame : _animation.frames())
+  {
+    _frameList.appendRow(new QStandardItem(QString::number(frame.duration())));
   }
   
   hasBeenModified(false);
