@@ -1,6 +1,7 @@
 #include "AnimationFrame.hpp"
 
-AnimationFrame::AnimationFrame(unsigned int ledCubeSize)
+AnimationFrame::AnimationFrame(unsigned int ledCubeSize, unsigned int duration) :
+  _duration(duration)
 {
   if(ledCubeSize == 0) ledCubeSize = 1;
 
@@ -19,8 +20,8 @@ AnimationFrame::AnimationFrame(unsigned int ledCubeSize)
   }
 }
 
-AnimationFrame::AnimationFrame(unsigned int ledCubeSize, const rapidjson::Value &object) :
-  AnimationFrame(ledCubeSize)
+AnimationFrame::AnimationFrame(unsigned int ledCubeSize, unsigned int duration, const rapidjson::Value &object) :
+  AnimationFrame(ledCubeSize, duration)
 {
   loadFromJSON(object);
 }

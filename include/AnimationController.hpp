@@ -16,7 +16,7 @@ class AnimationController : public QObject
     AnimationController(QMainWindow &mainWindow, Ui::MainWindow &mainWindowUi);
     ~AnimationController() {}
 
-    void setupConnect(Ui::MainWindow &mainWindow);
+    void setupConnect();
 
     bool load();
     bool save();
@@ -34,12 +34,13 @@ class AnimationController : public QObject
     bool saveAnimationAs();
     bool generateData();
     bool quitApplication();
-    void frameSelected(const QItemSelection & selected, const QItemSelection & deselected);
+    void frameSelected();
 
   private:
     bool _hasBeenModified;
 
     QMainWindow& _mainWindow;
+    Ui::MainWindow& _mainWindowUi;
     QSpinBox& _duration;
     CubeOpenGL& _cubeOpenGL;
 
@@ -47,8 +48,6 @@ class AnimationController : public QObject
 
     Animation _animation;
     QStandardItemModel _frameList;
-
-    AnimationFrame _frame;
 };
 
 #endif

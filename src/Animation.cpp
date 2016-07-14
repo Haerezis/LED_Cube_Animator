@@ -40,7 +40,7 @@ void Animation::save(std::ostream &stream)
   document.AddMember("cube_size", _cubeSize, allocator);
   for(auto &frame : _frames)
   {
-    frames.PushBack(frame.saveToJSON(allocator), allocator);
+    frames.PushBack(frame->saveToJSON(allocator), allocator);
   }
   document.AddMember("frames", frames, allocator);
 
@@ -65,10 +65,10 @@ void Animation::load(std::istream &stream)
   _cubeSize = document["cube_size"].GetUint();
   const Value &array = document["frames"];
   for (auto it = array.Begin(); it != array.End(); ++it)
-    _frames.emplace_back(_cubeSize, *it);
+    _frames.emplace_back(new AnimationFrame(_cubeSize, _cubeSize, *it));
 }
 
-std::vector<AnimationFrame>& Animation::frames()
+std::vector<std::shared_ptr<AnimationFrame>>& Animation::frames()
 {
   return _frames;
 }

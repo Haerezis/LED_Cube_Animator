@@ -4,12 +4,12 @@
 #include <thread>
 #include <chrono>
 
+#include "CubeOpenGL.hpp"
+#include "SphereVertices.hpp"
 #include <QMouseEvent>
 #include <QPoint>
 #include <QVector4D>
 #include <QQuaternion>
-#include "CubeOpenGL.hpp"
-#include "SphereVertices.hpp"
 
 const float CubeOpenGL::RotationAngleTick = 15.0f;
 const float CubeOpenGL::_NearPlaneDepth = 0.1f;
@@ -84,12 +84,15 @@ void CubeOpenGL::mousePressEvent(QMouseEvent * event)
 
   //(255,255,255) color is the background color (normally) and should be ignored
   if((pos[0] + pos[1] + pos[2]) < (255 + 255 + 255))
+  {
     _currentFrame->flip(pos[0], pos[1], pos[2]);
+    emit frameUpdated();
+  }
 
   update();
 }
 
-void CubeOpenGL::setAnimationFrame(AnimationFrame* frame)
+void CubeOpenGL::setAnimationFrame(std::shared_ptr<AnimationFrame>& frame)
 {
   _currentFrame = frame;
 }
@@ -171,7 +174,7 @@ void CubeOpenGL::paintLEDCube(bool pickingMode)
   // Clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if(_currentFrame != nullptr)
+  if(_currentFrame)
   {
     unsigned int cubeSize = _currentFrame->size();
 

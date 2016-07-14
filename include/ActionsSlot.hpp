@@ -3,8 +3,6 @@
 
 #include <QObject>
 
-#include "ui_MainWindows.h"
-
 class ActionsSlot : public QObject
 {
   Q_OBJECT

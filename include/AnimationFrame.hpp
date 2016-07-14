@@ -16,8 +16,8 @@ class AnimationFrame
     };
     static LEDState IntToEnum(unsigned int value);
 
-    AnimationFrame(unsigned int ledCubeSize);
-    AnimationFrame(unsigned int ledCubeSize, const rapidjson::Value &object);
+    AnimationFrame(unsigned int ledCubeSize, unsigned int duration);
+    AnimationFrame(unsigned int ledCubeSize,unsigned int duration, const rapidjson::Value &object);
     ~AnimationFrame() {}
 
     LEDState get(unsigned int floor, unsigned int line, unsigned int column);

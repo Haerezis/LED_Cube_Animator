@@ -15,10 +15,10 @@
 AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow& mainWindowUi) :
   _hasBeenModified(false),
   _mainWindow(mainWindow),
+  _mainWindowUi(mainWindowUi),
   _duration(*mainWindowUi.duration),
   _cubeOpenGL(*mainWindowUi.cubeOpenGL),
-  _animation(3),
-  _frame(3)
+  _animation(3)
 {
   QHeaderView *header = mainWindowUi.frame_list->horizontalHeader();
   header->setSectionResizeMode(QHeaderView::Stretch);
@@ -26,13 +26,19 @@ AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow
   header->setSectionsMovable(false);
   mainWindowUi.frame_list->setModel(&_frameList);
 
+
   QStandardItem *it = nullptr;
   it = new QStandardItem("ID");
   _frameList.setHorizontalHeaderItem(0,it);
   it = new QStandardItem("Duration");
   _frameList.setHorizontalHeaderItem(0,it);
 
-  _cubeOpenGL.setAnimationFrame(&_frame);
+  //Add initial frame
+  addFrame();
+
+  _cubeOpenGL.setAnimationFrame(_animation.frames()[0]);
+
+  setupConnect();
 }
 
 
@@ -44,19 +50,19 @@ void AnimationController::setFrame()
   if(index >= frames.size())
     return;
 
-  frames[index] = _frame;
-  _frame.clear();
+  //TODO
   hasBeenModified(true);
 }
 
 void AnimationController::addFrame()
 {
-  _frame.duration(_duration.value());
-  _frameList.appendRow(new QStandardItem(QString::number(_frame.duration())));
-  _animation.frames().push_back(_frame);
+  unsigned int duration = _duration.value();
 
+  _animation.frames().emplace_back(new AnimationFrame(_animation.cubeSize(), duration));
+  _frameList.appendRow(new QStandardItem(QString::number(duration)));
 
-  _frame.clear();
+  _mainWindowUi.frame_list->selectRow(_animation.frames().size() - 1);
+
   hasBeenModified(true);
 }
 
@@ -67,36 +73,41 @@ void AnimationController::setCurrentFrame()
   if(index >= frames.size())
     return;
 
-  _frame = frames[index];
+  //TODO
   _cubeOpenGL.update();
 }
 
 
 
-void AnimationController::setupConnect(Ui::MainWindow &mainWindow)
+void AnimationController::setupConnect()
 {
-  QObject::connect(mainWindow.actionNew_Animation, SIGNAL(triggered()), this, SLOT(newAnimation()));
-  QObject::connect(mainWindow.actionOpen_Animation, SIGNAL(triggered()), this, SLOT(openAnimation()));
-  QObject::connect(mainWindow.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
-  QObject::connect(mainWindow.actionSave_Animation_As, SIGNAL(triggered()), this, SLOT(saveAnimationAs()));
-  QObject::connect(mainWindow.actionGenerate_C_data, SIGNAL(triggered()), this, SLOT(generateData()));
-  QObject::connect(mainWindow.actionQuit, SIGNAL(triggered()), this, SLOT(quitApplication()));
+  QObject::connect(_mainWindowUi.actionNew_Animation, SIGNAL(triggered()), this, SLOT(newAnimation()));
+  QObject::connect(_mainWindowUi.actionOpen_Animation, SIGNAL(triggered()), this, SLOT(openAnimation()));
+  QObject::connect(_mainWindowUi.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
+  QObject::connect(_mainWindowUi.actionSave_Animation_As, SIGNAL(triggered()), this, SLOT(saveAnimationAs()));
+  QObject::connect(_mainWindowUi.actionGenerate_C_data, SIGNAL(triggered()), this, SLOT(generateData()));
+  QObject::connect(_mainWindowUi.actionQuit, SIGNAL(triggered()), this, SLOT(quitApplication()));
 
-  QObject::connect(mainWindow.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
-  QObject::connect(mainWindow.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
+  QObject::connect(_mainWindowUi.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
+  QObject::connect(_mainWindowUi.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
 
   QObject::connect(
-      mainWindow.frame_list->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-      this, SLOT(frameSelected(const QItemSelection &, const QItemSelection &))
-   );
+      _mainWindowUi.frame_list->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+      this, SLOT(frameSelected()));
 }
 
-void AnimationController::frameSelected(const QItemSelection & selected, const QItemSelection & deselected)
+void AnimationController::frameSelected()
 {
-  if(!selected.indexes().empty())
+  auto indexes = _mainWindowUi.frame_list->selectionModel()->selectedIndexes();
+
+  if(!indexes.empty())
   {
-    //TODO
-    std::cout << selected.indexes().back().row() << std::endl;
+    int selectedFrame = indexes.back().row();
+    if((0 <= selectedFrame) && (static_cast<unsigned int>(selectedFrame) < _animation.frames().size()))
+    {
+      _cubeOpenGL.setAnimationFrame(_animation.frames()[selectedFrame]);
+      _cubeOpenGL.update();
+    }
   }
 }
 
@@ -106,18 +117,17 @@ bool AnimationController::load()
     return false;
 
   std::ifstream file(_filepath);
+
   _animation.load(file);
-
-  if(!_animation.frames().empty())
-  {
-    _frame = _animation.frames()[0];
-  }
-
   _frameList.removeRows(0, _frameList.rowCount());
+
+  if(_animation.frames().empty())
+    addFrame();
+
   for(auto& frame : _animation.frames())
-  {
-    _frameList.appendRow(new QStandardItem(QString::number(frame.duration())));
-  }
+    _frameList.appendRow(new QStandardItem(QString::number(frame->duration())));
+
+  _mainWindowUi.frame_list->selectRow(0);
   
   hasBeenModified(false);
   return true;
@@ -240,4 +250,3 @@ bool AnimationController::quitApplication()
   QApplication::quit();
   return true;
 }
-

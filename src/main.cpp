@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
   }
 
   AnimationController animationController(w, ui);
-  animationController.setupConnect(ui);
 
   w.show();
 

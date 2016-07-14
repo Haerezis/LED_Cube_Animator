@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "AnimationFrame.hpp"
 
@@ -22,14 +23,14 @@ class Animation
     unsigned int cubeSize();
     void cubeSize(unsigned int cubeSize);
 
-    std::vector<AnimationFrame>& frames();
+    std::vector<std::shared_ptr<AnimationFrame>>& frames();
 
     void save(std::ostream &stream);
     void load(std::istream &stream);
     void generate(std::ostream &stream, DataFormat format, unsigned int dataSize);
   protected:
     unsigned int _cubeSize;
-    std::vector<AnimationFrame> _frames;
+    std::vector<std::shared_ptr<AnimationFrame>> _frames;
 };
 
 #endif

@@ -16,10 +16,12 @@
 
 class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
 {
+  Q_OBJECT
+  
   public:
     CubeOpenGL(QWidget * parent = 0, Qt::WindowFlags f = 0);
 
-    void setAnimationFrame(AnimationFrame* frame);
+    void setAnimationFrame(std::shared_ptr<AnimationFrame>& frame);
     
     static const float RotationAngleTick;
 
@@ -50,13 +52,17 @@ class CubeOpenGL : public QOpenGLWidget, public QOpenGLFunctions
     QMatrix4x4 _viewMatrix;
     QMatrix4x4 _projectionMatrix;
     
-    AnimationFrame* _currentFrame;
+    std::shared_ptr<AnimationFrame> _currentFrame;
     unsigned int _widgetWidth;
     unsigned int _widgetHeight;
 
     static const float _NearPlaneDepth;
     static const float _FarPlaneDepth;
     static const float _DistanceBetweenLED;
+  
+    signals:
+      void frameUpdated();
+
 };
 
 #endif // CUBEOPENGL_H
