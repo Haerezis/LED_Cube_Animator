@@ -21,13 +21,11 @@ class AnimationController : public QObject
     bool load();
     bool save();
 
-
-    void hasBeenModified(bool val);
+    void updateAnimationState(bool modificationNotSaved);
 
   public slots:
     void addFrame();
-    void setFrame();
-    void setCurrentFrame();
+    void setSelectedFramesDuration();
     bool newAnimation();
     bool openAnimation();
     bool saveAnimation();
@@ -35,9 +33,11 @@ class AnimationController : public QObject
     bool generateData();
     bool quitApplication();
     void frameSelected();
+    void animationUpdated() { updateAnimationState(true); }
 
   private:
-    bool _hasBeenModified;
+    std::vector<unsigned int> _getSelectedFramesIndex();
+    bool _modificationNotSaved;
 
     QMainWindow& _mainWindow;
     Ui::MainWindow& _mainWindowUi;

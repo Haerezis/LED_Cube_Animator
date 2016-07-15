@@ -13,7 +13,7 @@
 #include "ui_NewAnimationDialog.h"
 
 AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow& mainWindowUi) :
-  _hasBeenModified(false),
+  _modificationNotSaved(false),
   _mainWindow(mainWindow),
   _mainWindowUi(mainWindowUi),
   _duration(*mainWindowUi.duration),
@@ -42,16 +42,18 @@ AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow
 }
 
 
-void AnimationController::setFrame()
+void AnimationController::setSelectedFramesDuration()
 {
-  unsigned int index = 0;
-  //TODO get selected frames from list.
-  auto frames = _animation.frames();
-  if(index >= frames.size())
-    return;
+  auto indexes = _getSelectedFramesIndex();
+  unsigned int duration = _duration.value();
 
-  //TODO
-  hasBeenModified(true);
+  for(auto& index : indexes)
+  {
+    _animation.frames()[index]->duration(duration);
+    _frameList.item(index)->setText(QString::number(duration));
+  }
+
+  updateAnimationState(true);
 }
 
 void AnimationController::addFrame()
@@ -63,24 +65,14 @@ void AnimationController::addFrame()
 
   _mainWindowUi.frame_list->selectRow(_animation.frames().size() - 1);
 
-  hasBeenModified(true);
+  updateAnimationState(true);
 }
-
-void AnimationController::setCurrentFrame()
-{
-  unsigned int index = 0;
-  auto frames = _animation.frames();
-  if(index >= frames.size())
-    return;
-
-  //TODO
-  _cubeOpenGL.update();
-}
-
 
 
 void AnimationController::setupConnect()
 {
+  QObject::connect(&_cubeOpenGL, SIGNAL(frameUpdated()), this, SLOT(animationUpdated()));
+
   QObject::connect(_mainWindowUi.actionNew_Animation, SIGNAL(triggered()), this, SLOT(newAnimation()));
   QObject::connect(_mainWindowUi.actionOpen_Animation, SIGNAL(triggered()), this, SLOT(openAnimation()));
   QObject::connect(_mainWindowUi.actionSave_Animation, SIGNAL(triggered()), this, SLOT(saveAnimation()));
@@ -89,7 +81,7 @@ void AnimationController::setupConnect()
   QObject::connect(_mainWindowUi.actionQuit, SIGNAL(triggered()), this, SLOT(quitApplication()));
 
   QObject::connect(_mainWindowUi.add_button, SIGNAL(pressed()), this, SLOT(addFrame()));
-  QObject::connect(_mainWindowUi.set_button, SIGNAL(pressed()), this, SLOT(setFrame()));
+  QObject::connect(_mainWindowUi.set_button, SIGNAL(pressed()), this, SLOT(setSelectedFramesDuration()));
 
   QObject::connect(
       _mainWindowUi.frame_list->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
@@ -98,12 +90,12 @@ void AnimationController::setupConnect()
 
 void AnimationController::frameSelected()
 {
-  auto indexes = _mainWindowUi.frame_list->selectionModel()->selectedIndexes();
+  auto indexes = _getSelectedFramesIndex();
 
   if(!indexes.empty())
   {
-    int selectedFrame = indexes.back().row();
-    if((0 <= selectedFrame) && (static_cast<unsigned int>(selectedFrame) < _animation.frames().size()))
+    unsigned int selectedFrame = indexes.back();
+    if(selectedFrame < _animation.frames().size())
     {
       _cubeOpenGL.setAnimationFrame(_animation.frames()[selectedFrame]);
       _cubeOpenGL.update();
@@ -129,7 +121,7 @@ bool AnimationController::load()
 
   _mainWindowUi.frame_list->selectRow(0);
   
-  hasBeenModified(false);
+  updateAnimationState(false);
   return true;
 }
 
@@ -140,17 +132,15 @@ bool AnimationController::save()
 
   std::ofstream file(_filepath);
   _animation.save(file);
-  hasBeenModified(false);
+  updateAnimationState(false);
   return true;
 }
 
 
-void AnimationController::hasBeenModified(bool val)
+void AnimationController::updateAnimationState(bool modificationNotSaved)
 {
-  _hasBeenModified = val;
-  std::string star;
-  if(_hasBeenModified) star = "*";
-
+  _modificationNotSaved = modificationNotSaved;
+  std::string star = (modificationNotSaved ? "*" : "");
   _mainWindow.setWindowTitle(QString::fromStdString(_filepath + star + " - LED Cube Animator"));
 }
 
@@ -159,7 +149,7 @@ bool AnimationController::newAnimation()
   Ui::NewAnimationDialog dialogUI;
   QDialog dialog;
 
-  //TODO if _hasBeenModified == true, display dialog to save
+  //TODO if _modificationNotSaved == true, display dialog to save
 
   dialogUI.setupUi(&dialog);
   dialogUI.buttonBox->button(QDialogButtonBox::Ok)->setText("Create");
@@ -168,7 +158,7 @@ bool AnimationController::newAnimation()
   {
 
   }
-  hasBeenModified(false);
+  updateAnimationState(false);
   return true;
 }
 
@@ -177,7 +167,7 @@ bool AnimationController::openAnimation()
 {
   QFileDialog fileDialog(NULL, "Open Animation", QDir::home().absolutePath());
   
-  //TODO if _hasBeenModified == true, display dialog to save
+  //TODO if _modificationNotSaved == true, display dialog to save
   
   fileDialog.setFileMode(QFileDialog::AnyFile);
 
@@ -243,6 +233,17 @@ bool AnimationController::generateData()
   return true;
 }
 
+std::vector<unsigned int> AnimationController::_getSelectedFramesIndex()
+{
+  std::vector<unsigned int> retval;
+
+  for(const auto& elt : _mainWindowUi.frame_list->selectionModel()->selectedIndexes())
+  {
+    retval.push_back(elt.row());
+  }
+
+  return retval;
+}
 
 bool AnimationController::quitApplication()
 {
