@@ -74,11 +74,13 @@ std::vector<std::shared_ptr<AnimationFrame>>& Animation::frames()
 }
 
 
-void Animation::generate(std::ostream &stream, Animation::DataFormat format, unsigned int dataSize)
+void Animation::generate(std::ostream &stream)
 {
   stream << "#ifndef __CUBE_DATA_HPP" << std::endl;
-  stream << "#define __CUBE_DATA_HPP" << std::endl;
-
+  stream << "#define __CUBE_DATA_HPP" << std::endl << std::endl;
+  
+  stream << "#include <stdint.h>" << std::endl << std::endl;
+  //Data size : 8, 16, 32, 64
   //TODO
 
   stream << "#endif" << std::endl;

@@ -10,13 +10,6 @@
 class Animation
 {
   public:
-    enum DataFormat
-    {
-      Binary,
-      Hexadecimal
-    };
-
-  public:
     Animation(unsigned int cubeSize);
     Animation(std::istream &stream);
 
@@ -27,7 +20,7 @@ class Animation
 
     void save(std::ostream &stream);
     void load(std::istream &stream);
-    void generate(std::ostream &stream, DataFormat format, unsigned int dataSize);
+    void generate(std::ostream &stream);
   protected:
     unsigned int _cubeSize;
     std::vector<std::shared_ptr<AnimationFrame>> _frames;

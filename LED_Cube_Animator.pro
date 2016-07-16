@@ -60,8 +60,7 @@ HEADERS += include/ActionsSlot.hpp \
            include/rapidjson/internal/strtod.h \
            include/rapidjson/msinttypes/inttypes.h \
            include/rapidjson/msinttypes/stdint.h
-FORMS += UI/GenerationOptionsDialog.ui \
-         UI/MainWindows.ui \
+FORMS += UI/MainWindows.ui \
          UI/NewAnimationDialog.ui
 SOURCES += src/ActionsSlot.cpp \
            src/utils.cpp \

@@ -10,7 +10,6 @@
 #include <QString>
 #include <QPushButton>
 
-#include "ui_GenerationOptionsDialog.h"
 #include "ui_NewAnimationDialog.h"
 
 const unsigned int AnimationController::_defaultCubeSize = 3;
@@ -257,29 +256,15 @@ bool AnimationController::saveAnimationAs()
 
 bool AnimationController::generateData()
 {
-  QFileDialog fileDialog;
+  QFileDialog fileDialog(NULL, "Generate C header..", QDir::home().absolutePath());
   
   fileDialog.setFileMode(QFileDialog::AnyFile);
   fileDialog.setLabelText (QFileDialog::Accept, "Generate");
 
   if(fileDialog.exec() == QDialog::Accepted)
   {
-    Ui::GenerationOptionsDialog dialogUI;
-    QDialog dialog;
-
-    dialogUI.setupUi(&dialog);
-    if(dialog.exec() == QDialog::Accepted)
-    {
-      Animation::DataFormat dataFormat = 
-        dialogUI.data_format_hexa->isChecked() ?
-        Animation::DataFormat::Hexadecimal :
-        Animation::DataFormat::Binary;
-      unsigned int dataSize = dialogUI.data_size->currentText().toUInt();
-      
-      std::ofstream file(fileDialog.selectedFiles()[0].toStdString());
-
-      _animation.generate(file, dataFormat, dataSize);
-    }
+    std::ofstream file(fileDialog.selectedFiles()[0].toStdString());
+    _animation.generate(file);
   }
   return true;
 }
