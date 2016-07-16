@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QApplication>
 #include <QDialog>
 #include <QString>
@@ -12,13 +13,15 @@
 #include "ui_GenerationOptionsDialog.h"
 #include "ui_NewAnimationDialog.h"
 
+const unsigned int AnimationController::_defaultCubeSize = 3;
+
 AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow& mainWindowUi) :
   _modificationNotSaved(false),
   _mainWindow(mainWindow),
   _mainWindowUi(mainWindowUi),
   _duration(*mainWindowUi.duration),
   _cubeOpenGL(*mainWindowUi.cubeOpenGL),
-  _animation(3)
+  _animation(_defaultCubeSize)
 {
   QHeaderView *header = mainWindowUi.frame_list->horizontalHeader();
   header->setSectionResizeMode(QHeaderView::Stretch);
@@ -35,6 +38,7 @@ AnimationController::AnimationController(QMainWindow& mainWindow, Ui::MainWindow
 
   //Add initial frame
   addFrame();
+  updateAnimationState(false);
 
   _cubeOpenGL.setAnimationFrame(_animation.frames()[0]);
 
@@ -61,7 +65,9 @@ void AnimationController::addFrame()
   unsigned int duration = _duration.value();
 
   _animation.frames().emplace_back(new AnimationFrame(_animation.cubeSize(), duration));
-  _frameList.appendRow(new QStandardItem(QString::number(duration)));
+  auto item = new QStandardItem(QString::number(duration));
+  item->setTextAlignment(Qt::AlignCenter);
+  _frameList.appendRow(item);
 
   _mainWindowUi.frame_list->selectRow(_animation.frames().size() - 1);
 
@@ -103,6 +109,21 @@ void AnimationController::frameSelected()
   }
 }
 
+bool AnimationController::reset(unsigned int cubeSize)
+{
+  _filepath.clear();
+
+  _animation.frames().clear();
+  _frameList.removeRows(0, _frameList.rowCount());
+
+  _animation.cubeSize(cubeSize);
+
+  addFrame();
+  
+  updateAnimationState(false);
+  return true;
+}
+
 bool AnimationController::load()
 {
   if(_filepath.empty())
@@ -117,7 +138,11 @@ bool AnimationController::load()
     addFrame();
 
   for(auto& frame : _animation.frames())
-    _frameList.appendRow(new QStandardItem(QString::number(frame->duration())));
+  {
+    auto item = new QStandardItem(QString::number(frame->duration()));
+    item->setTextAlignment(Qt::AlignCenter);
+    _frameList.appendRow(item);
+  }
 
   _mainWindowUi.frame_list->selectRow(0);
   
@@ -146,37 +171,61 @@ void AnimationController::updateAnimationState(bool modificationNotSaved)
 
 bool AnimationController::newAnimation()
 {
+  bool retval = true;
   Ui::NewAnimationDialog dialogUI;
   QDialog dialog;
 
-  //TODO if _modificationNotSaved == true, display dialog to save
-
-  dialogUI.setupUi(&dialog);
-  dialogUI.buttonBox->button(QDialogButtonBox::Ok)->setText("Create");
-
-  if(dialog.exec() == QDialog::Accepted)
+  if (_modificationNotSaved)
   {
-
+    retval = _unsavedModificationDialog(
+        "The animation has been modified",
+        "Do you want to save your changes before opening another animation ?");
   }
-  updateAnimationState(false);
-  return true;
+
+  if(retval)
+  {
+    dialogUI.setupUi(&dialog);
+    dialogUI.buttonBox->button(QDialogButtonBox::Ok)->setText("Create");
+
+    if(dialog.exec() == QDialog::Accepted)
+    {
+      reset(dialogUI.cube_size->value());
+    }
+    else
+      retval = false;
+  }
+
+  return retval;
 }
 
 
 bool AnimationController::openAnimation()
 {
+  bool retval = true;
   QFileDialog fileDialog(NULL, "Open Animation", QDir::home().absolutePath());
   
-  //TODO if _modificationNotSaved == true, display dialog to save
-  
-  fileDialog.setFileMode(QFileDialog::AnyFile);
-
-  if(fileDialog.exec() == QDialog::Accepted)
+  if (_modificationNotSaved)
   {
-    _filepath = fileDialog.selectedFiles()[0].toStdString();
-    load();
+    retval = _unsavedModificationDialog(
+        "The animation has been modified",
+        "Do you want to save your changes before opening another animation ?");
   }
-  return true;
+
+  if(retval)
+  {
+    fileDialog.setFileMode(QFileDialog::AnyFile);
+    if(fileDialog.exec() == QDialog::Accepted)
+    {
+      _filepath = fileDialog.selectedFiles()[0].toStdString();
+      load();
+    }
+    else
+    {
+      retval = false;
+    }
+  }
+  
+  return retval;
 }
 
 
@@ -191,7 +240,8 @@ bool AnimationController::saveAnimation()
 
 bool AnimationController::saveAnimationAs()
 {
-  QFileDialog fileDialog(NULL, "Save Animation", QDir::home().absolutePath());
+  bool retval = false;
+  QFileDialog fileDialog(NULL, "Save animation as..", QDir::home().absolutePath());
   
   fileDialog.setFileMode(QFileDialog::AnyFile);
 
@@ -199,8 +249,9 @@ bool AnimationController::saveAnimationAs()
   {
     _filepath = fileDialog.selectedFiles()[0].toStdString();
     save();
+    retval = true;
   }
-  return true;
+  return retval;
 }
 
 
@@ -245,9 +296,44 @@ std::vector<unsigned int> AnimationController::_getSelectedFramesIndex()
   return retval;
 }
 
+bool AnimationController::_unsavedModificationDialog(const std::string& text, const std::string& informativeText)
+{
+  if (!_modificationNotSaved)
+    return false;
+
+  bool retval = true;
+
+  QMessageBox msgBox;
+  msgBox.setText(QString::fromStdString(text));
+  msgBox.setInformativeText(QString::fromStdString(informativeText));
+  msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+  msgBox.setDefaultButton(QMessageBox::Save);
+  int ret = msgBox.exec();
+
+  if(ret == QMessageBox::Cancel)
+  {
+    retval = false;
+  }
+  else if(ret == QMessageBox::Save)
+  {
+    retval = saveAnimation();
+  }
+
+  return retval;
+}
+
 bool AnimationController::quitApplication()
 {
-  //TODO Check if current animation is not saved.
-  QApplication::quit();
-  return true;
+  bool retval = true;
+  if (_modificationNotSaved)
+  {
+    retval = _unsavedModificationDialog(
+        "The animation has been modified",
+        "Do you want to save your changes before exiting the program ?");
+  }
+
+  if(retval)
+    QApplication::quit();
+
+  return retval;
 }

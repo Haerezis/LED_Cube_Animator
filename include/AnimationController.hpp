@@ -18,6 +18,7 @@ class AnimationController : public QObject
 
     void setupConnect();
 
+    bool reset(unsigned int cubeSize);
     bool load();
     bool save();
 
@@ -37,6 +38,7 @@ class AnimationController : public QObject
 
   private:
     std::vector<unsigned int> _getSelectedFramesIndex();
+    bool _unsavedModificationDialog(const std::string& text, const std::string& informativeText);
     bool _modificationNotSaved;
 
     QMainWindow& _mainWindow;
@@ -48,6 +50,8 @@ class AnimationController : public QObject
 
     Animation _animation;
     QStandardItemModel _frameList;
+
+    static const unsigned int _defaultCubeSize;
 };
 
 #endif
